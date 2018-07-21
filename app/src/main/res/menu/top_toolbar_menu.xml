@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/tasks_view_settings"
+        android:icon="@drawable/baseline_visibility_24"
+        android:title="@string/tasks_view_settings"
+        app:showAsAction="ifRoom">
+    <menu>
+        <item
+            android:id="@+id/show_by_date"
+            android:title="@string/show_tasks_by_date" />
+        <item
+            android:id="@+id/show_by_priority"
+            android:title="@string/show_tasks_by_priority" />
+    </menu>
+    </item>
+</menu>

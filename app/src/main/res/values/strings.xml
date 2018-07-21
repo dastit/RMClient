@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">RedmineMobileClient</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_login">Логин</string>
+    <string name="prompt_password">Пароль</string>
+    <string name="action_sign_in">Войти</string>
+    <string name="action_sign_in_short">Войти</string>
+    <string name="error_invalid_email">Неверное имя пользователя</string>
+    <string name="error_invalid_password">Пароль слишком короткий</string>
+    <string name="error_incorrect_password">Неверный пароль</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="wrong_password">Неверное имя пользователя или пароль.</string>
+    <string name="forbidden_action">Недостаточно прав.</string>
+    <string name="wrong_address">Сервер недоступен.</string>
+    <string name="internal_error">Внутренняя ошибка</string>
+    <string name="redmine_authenticator_label">Redmine client</string>
+    <string name="account_already_exists">Такой аккаунт уже существует.</string>
+    <string name="many_accounts_found">Обнаружено более одного сохраненного аккаунта</string>
+    <string name="account_list_title">Войти в систему как...</string>
+    <string name="zero_accounts">Аккаунтов не найдено</string>
+    <string name="add_new_account">Добавить нового пользователя</string>
+    <string name="remove_all_accounts">Удалить все аккаунты</string>
+    <string name="tasks_view_settings">Настройки отображения</string>
+    <string name="title_fmt">Некая настройка</string>
+    <string name="key1_action">Выполнить</string>
+    <string name="key1_summary">Выполнить быстро</string>
+    <string name="show_tasks_by_date">Сортировка по дате</string>
+    <string name="show_tasks_by_priority">Сортировка по приоритету</string>
+    <string name="menu_tasks">Задачи</string>
+    <string name="menu_projects">Проекты</string>
+    <string name="menu_stat">Статистика</string>
+    <string name="waiting_for_information">Загрузка данных...</string>
+    <string name="project_first_letter">Project first letter</string>
+    <string name="task_execution">Выполнение задания</string>
+    <string name="task_ex_notification_title">Заголовок</string>
+    <string name="task_ex_notification_message">Сообщение</string>
+    <string name="channel_name">redmine_tsk_exec_channel</string>
+    <string name="channel_description">Task_execution</string>
+    <string name="title_activity_task">TaskActivity</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
