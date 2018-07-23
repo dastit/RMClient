@@ -9,12 +9,8 @@ import com.example.diti.redminemobileclient.model.Issues;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class PositionalTaskDataSource extends PositionalDataSource<Issue> {
 
@@ -37,7 +33,7 @@ public class PositionalTaskDataSource extends PositionalDataSource<Issue> {
                 mRedmineClient.reposForTasks(params.requestedStartPosition, params.requestedLoadSize, sortBy);
 //        call.enqueue(new Callback<Issues>() {
 //            @Override
-//            public void onResponse(Call<Issues> call, Response<Issues> response) {
+//            public void onResponse(Call<Issues> call, IssueResponse<Issues> response) {
 //                if(response.isSuccessful()){
 //                    result = response.body();
 //                    if (params.placeholdersEnabled) {

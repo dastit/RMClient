@@ -10,10 +10,6 @@ import android.os.Parcelable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 @Entity
 public class Issue implements Parcelable {
     @PrimaryKey
@@ -91,13 +87,13 @@ public class Issue implements Parcelable {
     @Expose
     private String startDate;
 
-    @ColumnInfo(name = "last_update")
-    private long lastUpdate;
-    public long getLastUpdate() {
-        return lastUpdate;
+    @ColumnInfo(name = "last_request_time_in_milliseconds")
+    private long last_request_time_in_milliseconds;
+    public long getLast_request_time_in_milliseconds() {
+        return last_request_time_in_milliseconds;
     }
-    public void setLastUpdate(long lastUpdate) {
-        this.lastUpdate = lastUpdate;
+    public void setLast_request_time_in_milliseconds(long last_request_time_in_milliseconds) {
+        this.last_request_time_in_milliseconds = last_request_time_in_milliseconds;
     }
 
 

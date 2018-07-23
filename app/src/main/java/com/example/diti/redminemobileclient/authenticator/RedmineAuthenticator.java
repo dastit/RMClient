@@ -10,9 +10,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import com.example.diti.redminemobileclient.activities.LoginActivity;
 import com.example.diti.redminemobileclient.model.Users;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
-import com.example.diti.redminemobileclient.activities.LoginActivity;
 
 import java.io.IOException;
 
@@ -81,7 +81,7 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
 //            call.enqueue(new Callback<Users>() {
 //                //если успешно зашли - опять пытаемся закинуть токен в AM, возвращаем наконец токен
 //                @Override
-//                public void onResponse(Call<Users> call, Response<Users> response) {
+//                public void onResponse(Call<Users> call, IssueResponse<Users> response) {
 //                    if (response.isSuccessful()) {
 //                        String newAuthToken = response.body().getUser().getApiKey();
 //                        result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);

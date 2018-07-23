@@ -1,11 +1,9 @@
 package com.example.diti.redminemobileclient.retrofit;
 
-import com.example.diti.redminemobileclient.model.Issue;
+import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.model.Issues;
 import com.example.diti.redminemobileclient.model.Projects;
 import com.example.diti.redminemobileclient.model.Users;
-
-import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -34,6 +32,6 @@ public class RedmineRestApiClient {
         Call<Projects> reposForProjects(@Query("offset") int offset, @Query("limit") int limit, @Query("sort") String sortByColumn);
 
         @GET("/issues/{issueId}.json")
-        Call<Issue> reposForTask(@Path("issueId") String issueId);
+        Call<IssueResponse> reposForTask(@Path("issueId") String issueId);
     }
 }
