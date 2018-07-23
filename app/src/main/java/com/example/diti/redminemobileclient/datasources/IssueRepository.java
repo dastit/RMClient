@@ -32,6 +32,9 @@ public class IssueRepository {
 
                 mIssueDao.save(issue);
 
+                issue = mIssueDao.load(issueId);
+                Log.d(TAG, String.valueOf(issue == null));
+
             } catch (IOException e) {
                 e.printStackTrace();
             }

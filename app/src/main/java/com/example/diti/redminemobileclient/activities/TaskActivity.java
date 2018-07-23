@@ -41,7 +41,7 @@ public class TaskActivity extends AppCompatActivity implements TaskFragment.OnFr
         mIssueList = issueIds.split(":", 0);
         mAuthToken = getIntent().getStringExtra(EXTRA_TOKEN);
 
-        mDatabase = Room.inMemoryDatabaseBuilder(this, IssueDatabase.class).build();
+        mDatabase = Room.databaseBuilder(getApplicationContext(), IssueDatabase.class, "issue").build();
         RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "");
         IssueRepository repository = new IssueRepository(client, mDatabase.mIssueDao());
         IssueViewModelFactory factory = new IssueViewModelFactory(repository);

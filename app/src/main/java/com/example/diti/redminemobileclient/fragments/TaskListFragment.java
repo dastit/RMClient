@@ -31,14 +31,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.SwipeController;
 import com.example.diti.redminemobileclient.SwipeControllerActions;
+import com.example.diti.redminemobileclient.activities.MainActivity;
 import com.example.diti.redminemobileclient.activities.TaskActivity;
 import com.example.diti.redminemobileclient.datasources.PagedTaskListRepository;
-import com.example.diti.redminemobileclient.activities.MainActivity;
-import com.example.diti.redminemobileclient.datasources.PagedTasksListViewModelFactory;
-import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.PagedTasksListViewModel;
+import com.example.diti.redminemobileclient.datasources.PagedTasksListViewModelFactory;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
@@ -159,11 +159,11 @@ public class TaskListFragment extends Fragment {
             NotificationManager notificationManager = getActivity().getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
             notificationBuilder = new NotificationCompat.Builder(getActivity(), CHANNEL_ID).setSmallIcon(R.drawable.outline_timer_24)
-                    .setContentTitle("Выполняется задача №" + mIssue.getId())
+                    .setContentTitle("Выполняется задача №" + mIssue.getIssueid())
                     .setContentText(mIssue.getSubject());
         } else {
             notificationBuilder = new NotificationCompat.Builder(getActivity()).setSmallIcon(R.drawable.outline_timer_24)
-                    .setContentTitle("Выполняется задача №" + mIssue.getId())
+                    .setContentTitle("Выполняется задача №" + mIssue.getIssueid())
                     .setContentText(mIssue.getSubject());
         }
 
@@ -253,7 +253,7 @@ public class TaskListFragment extends Fragment {
                             for (int i = 0; i<mAdapter.getCurrentList().size(); i++) {
                                 Issue issue = mAdapter.getCurrentList().get(i);
                                 if(issue!=null){
-                                    issueIds = issue.getId()+":"+issueIds;
+                                    issueIds = issue.getIssueid()+":"+issueIds;
                                 }
                             }
                             intent.putExtra(TaskActivity.EXTRA_ISSUES_LIST, issueIds);

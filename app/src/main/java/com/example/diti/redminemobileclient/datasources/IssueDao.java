@@ -13,7 +13,7 @@ public interface IssueDao {
     @Insert(onConflict = REPLACE)
     void save(Issue issue);
 
-    @Query("SELECT * FROM issue WHERE id = :issueId")
+    @Query("SELECT * FROM issue WHERE issueid = :issueId")
     Issue load(Integer issueId);
 
 

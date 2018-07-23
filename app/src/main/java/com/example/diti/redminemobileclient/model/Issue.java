@@ -15,7 +15,7 @@ public class Issue implements Parcelable {
     @PrimaryKey
     @SerializedName("id")
     @Expose
-    private Integer id;
+    private Integer issueid;
 
     @ColumnInfo(name = "done_ratio")
     @SerializedName("done_ratio")
@@ -123,12 +123,12 @@ public class Issue implements Parcelable {
         this.description = description;
     }
 
-    public Integer getId() {
-        return id;
+    public Integer getIssueid() {
+        return issueid;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setIssueid(Integer issueid) {
+        this.issueid = issueid;
     }
 
     public Integer getDoneRatio() {
@@ -248,7 +248,7 @@ public class Issue implements Parcelable {
 
     @Ignore
     protected Issue(Parcel in) {
-        id = in.readByte() == 0x00 ? null : in.readInt();
+        issueid = in.readByte() == 0x00 ? null : in.readInt();
         doneRatio = in.readByte() == 0x00 ? null : in.readInt();
         subject = in.readString();
         updatedOn = in.readString();
@@ -281,11 +281,11 @@ public class Issue implements Parcelable {
     @Ignore
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        if (id == null) {
+        if (issueid == null) {
             dest.writeByte((byte) (0x00));
         } else {
             dest.writeByte((byte) (0x01));
-            dest.writeInt(id);
+            dest.writeInt(issueid);
         }
         if (doneRatio == null) {
             dest.writeByte((byte) (0x00));
