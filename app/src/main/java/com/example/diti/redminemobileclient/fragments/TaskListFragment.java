@@ -244,24 +244,7 @@ public class TaskListFragment extends Fragment {
                 mProjectFirstLetterImageView = itemView.findViewById(R.id.project_letter_image_view);
                 mProjectFirstLetterTextView = itemView.findViewById(R.id.project_letter_text_view);
 
-                itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(mAdapter.getCurrentList()!= null){
-                            Intent intent = new Intent(getActivity(), TaskActivity.class);
-                            String issueIds = "";
-                            for (int i = 0; i<mAdapter.getCurrentList().size(); i++) {
-                                Issue issue = mAdapter.getCurrentList().get(i);
-                                if(issue!=null){
-                                    issueIds = issue.getIssueid()+":"+issueIds;
-                                }
-                            }
-                            intent.putExtra(TaskActivity.EXTRA_ISSUES_LIST, issueIds);
-                            intent.putExtra(TaskActivity.EXTRA_TOKEN, mAuthToken);
-                            startActivity(intent);
-                        }
-                    }
-                });
+
             }
 
             public void bind(Issue issue) {
@@ -287,6 +270,17 @@ public class TaskListFragment extends Fragment {
                         date = new Date();
                         e.printStackTrace();
                     }
+                    itemView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            Intent intent = new Intent(getActivity(), TaskActivity.class);
+                            Integer issueId = issue.getIssueid();
+                            intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
+                            intent.putExtra(TaskActivity.EXTRA_TOKEN, mAuthToken);
+                            startActivity(intent);
+                        }
+                    });
                     mTaskSubject.setText(issue.getSubject());
                     mTaskProject.setText(issue.getProject().getName());
                     String projectName = issue.getProject().getName().substring(0, 1);

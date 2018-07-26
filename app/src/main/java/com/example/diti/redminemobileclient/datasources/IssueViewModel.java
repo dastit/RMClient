@@ -15,9 +15,6 @@ public class IssueViewModel extends ViewModel {
     }
 
     public void init(Integer issueId){
-//        if(mIssueLiveData != null){
-//            return;
-//        }
         Issue issue = mIssueRepository.getIssue(issueId);
         mIssueLiveData.postValue(issue);
     }

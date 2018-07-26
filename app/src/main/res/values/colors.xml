@@ -9,4 +9,6 @@
     <color name="colorWhite">#ffffff</color>
     <color name="colorBlack">#000000</color>
     <color name="colorGreyBackground">#fafafa</color>
+    <color name="colorLightRed">#ffebee</color>
+    <color name="colorLightGrey">#eceff1</color>
 </resources>

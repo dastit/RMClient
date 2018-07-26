@@ -1,28 +1,45 @@
 package com.example.diti.redminemobileclient.model;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+@Entity
 public class Project {
-
+    @ColumnInfo(name = "description")
     @SerializedName("description")
     @Expose
     private String description;
+
+    @ColumnInfo(name = "name")
     @SerializedName("name")
     @Expose
     private String name;
+
+    @PrimaryKey
     @SerializedName("id")
     @Expose
     private Integer id;
+
+    @ColumnInfo(name = "updated_on")
     @SerializedName("updated_on")
     @Expose
     private String updatedOn;
+
+    @ColumnInfo(name = "created_on")
     @SerializedName("created_on")
     @Expose
     private String createdOn;
+
+    @ColumnInfo(name = "status")
     @SerializedName("status")
     @Expose
     private Integer status;
+
+    @ColumnInfo(name = "identifier")
     @SerializedName("identifier")
     @Expose
     private String identifier;

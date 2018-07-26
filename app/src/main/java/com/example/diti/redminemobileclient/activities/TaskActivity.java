@@ -5,6 +5,7 @@ import android.arch.persistence.room.Room;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -16,32 +17,32 @@ import com.example.diti.redminemobileclient.datasources.IssueDatabase;
 import com.example.diti.redminemobileclient.datasources.IssueRepository;
 import com.example.diti.redminemobileclient.datasources.IssueViewModel;
 import com.example.diti.redminemobileclient.datasources.IssueViewModelFactory;
+import com.example.diti.redminemobileclient.fragments.TaskCommentsFragment;
+import com.example.diti.redminemobileclient.fragments.TaskDetailsFragment;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
 
-public class TaskActivity extends AppCompatActivity implements TaskFragment.OnFragmentInteractionListener {
+public class TaskActivity extends AppCompatActivity implements TaskDetailsFragment.OnFragmentInteractionListener, TaskCommentsFragment.OnListFragmentInteractionListener {
 
-    private static final String TAG               = "TaskActivity";
-    public static final  String EXTRA_ISSUES_LIST = "issues_list";
-    public static final  String EXTRA_TOKEN       = "token";
+    private static final String TAG            = "TaskActivity";
+    public static final  String EXTRA_ISSUE_ID = "issue_id";
+    public static final  String EXTRA_TOKEN    = "token";
 
     private ViewPager              mViewPager;
     private MyFragmentPagerAdapter mAdapter;
     private String                 mAuthToken;
-    private String[] mIssueList = new String[0];
-    private int pages = 2;
     private IssueViewModel  mIssueViewModel;
     private IssueDatabase   mDatabase;
+    int pages = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task);
-        String issueIds = getIntent().getStringExtra(EXTRA_ISSUES_LIST);
-        mIssueList = issueIds.split(":", 0);
+        Integer issueId = getIntent().getIntExtra(EXTRA_ISSUE_ID, 0);
         mAuthToken = getIntent().getStringExtra(EXTRA_TOKEN);
 
-        mDatabase = Room.databaseBuilder(getApplicationContext(), IssueDatabase.class, "issue").build();
+        mDatabase = Room.databaseBuilder(getApplicationContext(), IssueDatabase.class, "issue").fallbackToDestructiveMigration().build();
         RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "");
         IssueRepository repository = new IssueRepository(client, mDatabase.mIssueDao());
         IssueViewModelFactory factory = new IssueViewModelFactory(repository);
@@ -75,8 +76,10 @@ public class TaskActivity extends AppCompatActivity implements TaskFragment.OnFr
                     }
                 });
             }
-        }.execute(Integer.parseInt(mIssueList[0]));
+        }.execute(issueId);
     }
+
+
 
     private class MyFragmentPagerAdapter extends FragmentPagerAdapter {
 
@@ -86,7 +89,13 @@ public class TaskActivity extends AppCompatActivity implements TaskFragment.OnFr
 
         @Override
         public Fragment getItem(int position) {
-            return TaskFragment.newInstance();
+            if(position == 0){
+                return TaskDetailsFragment.newInstance();
+            }
+            else
+            {
+                return TaskCommentsFragment.newInstance();
+            }
         }
 
         @Override
@@ -94,10 +103,25 @@ public class TaskActivity extends AppCompatActivity implements TaskFragment.OnFr
             return pages;
         }
 
+        @Nullable
+        @Override
+        public CharSequence getPageTitle(int position) {
+            if(position == 0){
+                return getString(R.string.task_details_tab);
+            }
+            else {
+                return getString(R.string.task_comments_tab);
+            }
+        }
     }
 
     @Override
     public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onListFragmentInteraction() {
 
     }
 }

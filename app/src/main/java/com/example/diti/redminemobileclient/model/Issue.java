@@ -2,16 +2,20 @@ package com.example.diti.redminemobileclient.model;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.arch.persistence.room.TypeConverters;
 
+import com.example.diti.redminemobileclient.datasources.IssueAuthor;
+import com.example.diti.redminemobileclient.datasources.IssueJournalTypeConverter;
+import com.example.diti.redminemobileclient.datasources.IssueStatus;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
-public class Issue implements Parcelable {
+public class Issue  {
     @PrimaryKey
     @SerializedName("id")
     @Expose
@@ -21,6 +25,11 @@ public class Issue implements Parcelable {
     @SerializedName("done_ratio")
     @Expose
     private Integer doneRatio;
+
+    @ColumnInfo(name = "spent_hours")
+    @SerializedName("spent_hours")
+    @Expose
+    private String spent_hours;
 
     @ColumnInfo(name = "subject")
     @SerializedName("subject")
@@ -32,52 +41,30 @@ public class Issue implements Parcelable {
     @Expose
     private String updatedOn;
 
-//   // @ColumnInfo(name = "author")
-//    @SerializedName("author")
-//    @Expose
-//    private Author author;
-//
-//   // @ColumnInfo(name = "status")
-//    @SerializedName("status")
-//    @Expose
-//    private Status status;
-//
-//   // @ColumnInfo(name = "priority")
-//    @SerializedName("priority")
-//    @Expose
-//    private Priority priority;
-
     @ColumnInfo(name = "created_on")
     @SerializedName("created_on")
     @Expose
     private String createdOn;
 
-   // @ColumnInfo(name = "estimated_hours")
+    @ColumnInfo(name = "estimated_hours")
     @SerializedName("estimated_hours")
     @Expose
     private String estimatedHours;
 
-//    //@ColumnInfo(name = "parent")
-//    @SerializedName("parent")
-//    @Expose
-//    private Parent parent;
 
-    //@ColumnInfo(name = "due_date")
+
+    @ColumnInfo(name = "due_date")
     @SerializedName("due_date")
     @Expose
     private String dueDate;
 
-   // @ColumnInfo(name = "description")
+    @ColumnInfo(name = "description")
     @SerializedName("description")
     @Expose
     private String description;
 
-//    //@ColumnInfo(name = "tracker")
-//    @SerializedName("tracker")
-//    @Expose
-//    private Tracker tracker;
 
-    @Ignore
+    @TypeConverters(IssueJournalTypeConverter.class)
     @SerializedName("project")
     @Expose
     private Project project;
@@ -87,25 +74,37 @@ public class Issue implements Parcelable {
     @Expose
     private String startDate;
 
+    @TypeConverters(IssueJournalTypeConverter.class)
+    @SerializedName("assigned_to")
+    @Expose
+    private IssueAssignedTo assigned_to;
+
+    @TypeConverters(IssueJournalTypeConverter.class)
+    @SerializedName("author")
+    @Expose
+    private IssueAuthor author;
+
+    @TypeConverters(IssueJournalTypeConverter.class)
+    @SerializedName("status")
+    @Expose
+    private IssueStatus status;
+
+    @TypeConverters(IssueJournalTypeConverter.class)
+    @SerializedName("journals")
+    @Expose
+    private List<IssueJournal> journals = new ArrayList<IssueJournal>();
+
     @ColumnInfo(name = "last_request_time_in_milliseconds")
     private long last_request_time_in_milliseconds;
+
+
     public long getLast_request_time_in_milliseconds() {
         return last_request_time_in_milliseconds;
     }
+
     public void setLast_request_time_in_milliseconds(long last_request_time_in_milliseconds) {
         this.last_request_time_in_milliseconds = last_request_time_in_milliseconds;
     }
-
-
-//    //@ColumnInfo(name = "assigned_to")
-//    @SerializedName("assigned_to")
-//    @Expose
-//    private AssignedTo assignedTo;
-//
-//    //@Ignore
-//    @SerializedName("custom_fields")
-//    @Expose
-//    private List<CustomField> customFields = new ArrayList<CustomField>();
 
     public String getSubject() {
         return subject;
@@ -147,29 +146,6 @@ public class Issue implements Parcelable {
         this.updatedOn = updatedOn;
     }
 
-//    public Author getAuthor() {
-//        return author;
-//    }
-//
-//    public void setAuthor(Author author) {
-//        this.author = author;
-//    }
-//
-//    public Status getStatus() {
-//        return status;
-//    }
-//
-//    public void setStatus(Status status) {
-//        this.status = status;
-//    }
-//
-//    public Priority getPriority() {
-//        return priority;
-//    }
-//
-//    public void setPriority(Priority priority) {
-//        this.priority = priority;
-//    }
 
     public String getCreatedOn() {
         return createdOn;
@@ -187,14 +163,6 @@ public class Issue implements Parcelable {
         this.estimatedHours = estimatedHours;
     }
 
-//    public Parent getParent() {
-//        return parent;
-//    }
-//
-//    public void setParent(Parent parent) {
-//        this.parent = parent;
-//    }
-
     public String getDueDate() {
         return dueDate;
     }
@@ -202,14 +170,6 @@ public class Issue implements Parcelable {
     public void setDueDate(String dueDate) {
         this.dueDate = dueDate;
     }
-
-//    public Tracker getTracker() {
-//        return tracker;
-//    }
-//
-//    public void setTracker(Tracker tracker) {
-//        this.tracker = tracker;
-//    }
 
     public Project getProject() {
         return project;
@@ -227,312 +187,49 @@ public class Issue implements Parcelable {
         this.startDate = startDate;
     }
 
-//    public AssignedTo getAssignedTo() {
-//        return assignedTo;
-//    }
-//
-//    public void setAssignedTo(AssignedTo assignedTo) {
-//        this.assignedTo = assignedTo;
-//    }
-//
-//    public List<CustomField> getCustomFields() {
-//        return customFields;
-//    }
-//
-//    public void setCustomFields(List<CustomField> customFields) {
-//        this.customFields = customFields;
-//    }
+    public List<IssueJournal> getJournals() {
+        return journals;
+    }
+
+    public void setJournals(List<IssueJournal> journals) {
+        this.journals = journals;
+    }
+
+    public IssueAssignedTo getAssigned_to() {
+        return assigned_to;
+    }
+
+    public void setAssigned_to(IssueAssignedTo assigned_to) {
+        this.assigned_to = assigned_to;
+    }
+
+    public IssueAuthor getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(IssueAuthor author) {
+        this.author = author;
+    }
+
+    public String getSpent_hours() {
+        return spent_hours;
+    }
+
+    public void setSpent_hours(String spent_hours) {
+        this.spent_hours = spent_hours;
+    }
+
+    public IssueStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(IssueStatus status) {
+        this.status = status;
+    }
 
     public Issue() {
     }
 
-    @Ignore
-    protected Issue(Parcel in) {
-        issueid = in.readByte() == 0x00 ? null : in.readInt();
-        doneRatio = in.readByte() == 0x00 ? null : in.readInt();
-        subject = in.readString();
-        updatedOn = in.readString();
-//        author = (Author) in.readValue(Author.class.getClassLoader());
-//        status = (Status) in.readValue(Status.class.getClassLoader());
- //       priority = (Priority) in.readValue(Priority.class.getClassLoader());
-        createdOn = in.readString();
-        estimatedHours = in.readString();
-//        parent = (Parent) in.readValue(Parent.class.getClassLoader());
-        dueDate = in.readString();
-        description = in.readString();
- //       tracker = (Tracker) in.readValue(Tracker.class.getClassLoader());
- //       project = (Project) in.readValue(Project.class.getClassLoader());
-        startDate = in.readString();
-//        assignedTo = (AssignedTo) in.readValue(AssignedTo.class.getClassLoader());
-//        if (in.readByte() == 0x01) {
-//            customFields = new ArrayList<CustomField>();
-//            in.readList(customFields, CustomField.class.getClassLoader());
-//        } else {
-//            customFields = null;
-//        }
-    }
 
-    @Ignore
-    @Override
-    public int describeContents() {
-        return 0;
-    }
 
-    @Ignore
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        if (issueid == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeInt(issueid);
-        }
-        if (doneRatio == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeInt(doneRatio);
-        }
-        dest.writeString(subject);
-        dest.writeString(updatedOn);
-        //dest.writeValue(author);
-        //dest.writeValue(status);
-        //dest.writeValue(priority);
-        dest.writeString(createdOn);
-        dest.writeString(estimatedHours);
-        //dest.writeValue(parent);
-        dest.writeString(dueDate);
-        dest.writeString(description);
-        //dest.writeValue(tracker);
-        //dest.writeValue(project);
-        dest.writeString(startDate);
-        //dest.writeValue(assignedTo);
-//        if (customFields == null) {
-//            dest.writeByte((byte) (0x00));
-//        } else {
-//            dest.writeByte((byte) (0x01));
-//            dest.writeList(customFields);
-//        }
-    }
-
-    @Ignore
-    public static final Parcelable.Creator<Issue> CREATOR = new Parcelable.Creator<Issue>() {
-        @Override
-        public Issue createFromParcel(Parcel in) {
-            return new Issue(in);
-        }
-
-        @Override
-        public Issue[] newArray(int size) {
-            return new Issue[size];
-        }
-    };
-
-//
-//    public class Author {
-//
-//        @SerializedName("id")
-//        @Expose
-//        private Integer id;
-//        @SerializedName("name")
-//        @Expose
-//        private String  name;
-//
-//        public Integer getId() {
-//            return id;
-//        }
-//
-//        public void setId(Integer id) {
-//            this.id = id;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public void setName(String name) {
-//            this.name = name;
-//        }
-//    }
-//    public class AssignedTo {
-//
-//        @SerializedName("id")
-//        @Expose
-//        private Integer id;
-//        @SerializedName("name")
-//        @Expose
-//        private String  name;
-//
-//        public Integer getId() {
-//            return id;
-//        }
-//
-//        public void setId(Integer id) {
-//            this.id = id;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public void setName(String name) {
-//            this.name = name;
-//        }
-//    }
-//    public class Status {
-//
-//        @SerializedName("id")
-//        @Expose
-//        private Integer id;
-//        @SerializedName("name")
-//        @Expose
-//        private String name;
-//
-//        public Integer getId() {
-//            return id;
-//        }
-//
-//        public void setId(Integer id) {
-//            this.id = id;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public void setName(String name) {
-//            this.name = name;
-//        }
-//
-//    }
-//    public class Tracker {
-//
-//        @SerializedName("id")
-//        @Expose
-//        private Integer id;
-//        @SerializedName("name")
-//        @Expose
-//        private String name;
-//
-//        public Integer getId() {
-//            return id;
-//        }
-//
-//        public void setId(Integer id) {
-//            this.id = id;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public void setName(String name) {
-//            this.name = name;
-//        }
-//
-//    }
-//    public class Parent {
-//
-//        @SerializedName("id")
-//        @Expose
-//        private Integer id;
-//
-//        public Integer getId() {
-//            return id;
-//        }
-//
-//        public void setId(Integer id) {
-//            this.id = id;
-//        }
-//
-//    }
-//    public class Priority {
-//
-//        @SerializedName("id")
-//        @Expose
-//        private Integer id;
-//        @SerializedName("name")
-//        @Expose
-//        private String name;
-//
-//        public Integer getId() {
-//            return id;
-//        }
-//
-//        public void setId(Integer id) {
-//            this.id = id;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public void setName(String name) {
-//            this.name = name;
-//        }
-//
-//    }
-//    public class Project {
-//
-//        @SerializedName("id")
-//        @Expose
-//        private Integer id;
-//        @SerializedName("name")
-//        @Expose
-//        private String name;
-//
-//        public Integer getId() {
-//            return id;
-//        }
-//
-//        public void setId(Integer id) {
-//            this.id = id;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public void setName(String name) {
-//            this.name = name;
-//        }
-//
-//    }
-//    public class CustomField {
-//
-//        @SerializedName("id")
-//        @Expose
-//        private Integer id;
-//        @SerializedName("value")
-//        @Expose
-//        private String value;
-//        @SerializedName("name")
-//        @Expose
-//        private String name;
-//
-//        public Integer getId() {
-//            return id;
-//        }
-//
-//        public void setId(Integer id) {
-//            this.id = id;
-//        }
-//
-//        public String getValue() {
-//            return value;
-//        }
-//
-//        public void setValue(String value) {
-//            this.value = value;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public void setName(String name) {
-//            this.name = name;
-//        }
-//
-//    }
 }
