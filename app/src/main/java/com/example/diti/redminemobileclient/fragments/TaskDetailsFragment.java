@@ -3,10 +3,17 @@ package com.example.diti.redminemobileclient.fragments;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.FileProvider;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ImageSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +23,10 @@ import android.widget.TextView;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.IssueViewModel;
 import com.example.diti.redminemobileclient.model.Issue;
+import com.squareup.picasso.Picasso;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -25,7 +35,8 @@ import java.util.Date;
 
 public class TaskDetailsFragment extends Fragment {
 
-    private TextView     mIDAndCRDate;
+    private static final String TAG = "TaskDetailsFragment";
+    private TextView mIDAndCRDate;
     private TextView     mProjectName;
     private TextView     mAuthor;
     private TextView     mStatus;
@@ -104,6 +115,23 @@ public class TaskDetailsFragment extends Fragment {
             }
         });
 
+        mIDAndCRDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //TODO: try spannable to show images from description
+                File file = new File(getActivity().getCacheDir(), issue.getAttachments().get(0).getFilename());
+
+                Uri uri = FileProvider.getUriForFile(getActivity(), "be.myapplication", file);
+
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addCategory(Intent.CATEGORY_DEFAULT);
+                intent.setDataAndType(uri, "image/*");
+
+                startActivity(intent);
+            }
+        });
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         Date date;
@@ -126,12 +154,47 @@ public class TaskDetailsFragment extends Fragment {
 
         mAssignedTo.setText("Назначена: " + issue.getAssigned_to().getName());
         mAuthor.setText("Автор: " + issue.getAuthor().getName());
-        mDescription.setText(issue.getDescription());
+        //mDescription.setText(issue.getDescription());
         mEstimatedTime.setText("Оценка времени: " + issue.getEstimatedHours());
         mSpentHours.setText("Потрачено: " + issue.getSpent_hours().toString());
         mStatus.setText("Статус: " + issue.getStatus().getName());
         mProjectName.setText("Проект: " + issue.getProject().getName());
         mSubject.setText(issue.getSubject());
+
+        if(issue.getAttachments().size()!=0){
+            new AsyncTask<Issue, Void, SpannableStringBuilder>() {
+            @Override
+                protected SpannableStringBuilder doInBackground(Issue... issues) {
+                String text = issues[0].getDescription();
+                SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+                for (int i = 0; i<issues[0].getAttachments().size(); i++) {
+                    String name = issues[0].getAttachments().get(i).getFilename();
+                    if(text.contains(name)) {
+                        File file = new File(getActivity().getCacheDir(), name);
+                        Uri uri = FileProvider.getUriForFile(getActivity(), "be.myapplication", file);
+                        int firstIndex = text.indexOf(name)-1;        //с учетом восклицательных знаков
+                        int lastIndex = firstIndex + name.length()+1; //по обеим сторонам от названия
+                        ImageSpan imageSpan = null;
+                        Bitmap bitmap = null;
+                        try {
+                            bitmap = Picasso.get().load(uri).get();
+                            bitmap = Bitmap.createScaledBitmap(bitmap,getView().getWidth(),bitmap.getHeight(),true);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        imageSpan = new ImageSpan(getActivity(), bitmap);
+                        ssb.setSpan(imageSpan, firstIndex, lastIndex, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                    }
+                }
+                return ssb;
+            }
+
+                @Override
+                protected void onPostExecute(SpannableStringBuilder spannableStringBuilder) {
+                    mDescription.setText(spannableStringBuilder);
+                }
+            }.execute(issue);
+        }
     }
 
     private void expand(){

@@ -3,6 +3,7 @@ package com.example.diti.redminemobileclient.datasources;
 import android.arch.persistence.room.TypeConverter;
 
 import com.example.diti.redminemobileclient.model.IssueAssignedTo;
+import com.example.diti.redminemobileclient.model.IssueAttachment;
 import com.example.diti.redminemobileclient.model.IssueJournal;
 import com.example.diti.redminemobileclient.model.IssueJournalDetail;
 import com.example.diti.redminemobileclient.model.IssueJournalUser;
@@ -112,5 +113,22 @@ public class IssueJournalTypeConverter {
     @TypeConverter
     public static String fromProjectToString (Project project){
         return mGson.toJson(project);
+    }
+
+
+    @TypeConverter
+    public static List<IssueAttachment> fromStringToIssueAttachment (String data){
+        if (data == null) {
+            return Collections.emptyList();
+        }
+
+        Type listType = new TypeToken<List<IssueAttachment>>() {}.getType();
+
+        return mGson.fromJson(data, listType);
+    }
+
+    @TypeConverter
+    public static String fromIssueAttachmentToString(List<IssueAttachment> attachments){
+        return mGson.toJson(attachments);
     }
 }

@@ -84,6 +84,8 @@ public class Issue  {
     @Expose
     private IssueAuthor author;
 
+
+
     @TypeConverters(IssueJournalTypeConverter.class)
     @SerializedName("status")
     @Expose
@@ -93,6 +95,12 @@ public class Issue  {
     @SerializedName("journals")
     @Expose
     private List<IssueJournal> journals = new ArrayList<IssueJournal>();
+
+
+    @TypeConverters(IssueJournalTypeConverter.class)
+    @SerializedName("attachments")
+    @Expose
+    private List<IssueAttachment> mAttachments = new ArrayList<IssueAttachment>();
 
     @ColumnInfo(name = "last_request_time_in_milliseconds")
     private long last_request_time_in_milliseconds;
@@ -225,6 +233,14 @@ public class Issue  {
 
     public void setStatus(IssueStatus status) {
         this.status = status;
+    }
+
+    public List<IssueAttachment> getAttachments() {
+        return mAttachments;
+    }
+
+    public void setAttachments(List<IssueAttachment> attachments) {
+        mAttachments = attachments;
     }
 
     public Issue() {
