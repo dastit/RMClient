@@ -138,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
 
 
     public void getToken(final Account account) {
+
         mAccountManager.getAuthToken(account, RedmineAccount.TOKEN_FULL_ACCESS, new Bundle(), true,
                                      new AccountManagerCallback<Bundle>() {
                                          @Override

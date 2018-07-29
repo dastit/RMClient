@@ -105,6 +105,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
         android:layout_below="@id/task_details"
         android:divider="?android:listDivider"
         android:dividerPadding="16dp"
@@ -133,5 +134,6 @@
                 android:bufferType="spannable"
                 tools:text="Описание" />
         </android.support.v4.widget.NestedScrollView>
+
     </LinearLayout>
 </RelativeLayout>

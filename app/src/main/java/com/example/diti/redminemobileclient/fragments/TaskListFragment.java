@@ -28,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -66,6 +67,7 @@ public class TaskListFragment extends Fragment {
     private NotificationCompat.Builder        notificationBuilder;
     private Notification                      notification;
     private PagedTaskListRepository           repository;
+    private ProgressBar mProgressBar;
 
     public TaskListFragment() {
     }
@@ -84,19 +86,23 @@ public class TaskListFragment extends Fragment {
         setRetainInstance(true);
         mAuthToken = getArguments().getString(ARG_TOKEN);
 
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "");
-        repository = new PagedTaskListRepository(client);
-        PagedTasksListViewModelFactory factory = new PagedTasksListViewModelFactory(repository);
-        viewModel = ViewModelProviders.of(this, factory).get(PagedTasksListViewModel.class);
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tasklist_list, container, false);
+        mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_tasklist_progress);
+        mProgressBar.setVisibility(View.VISIBLE);
+
+
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "");
+        repository = new PagedTaskListRepository(client);
+        PagedTasksListViewModelFactory factory = new PagedTasksListViewModelFactory(repository);
+        viewModel = ViewModelProviders.of(this, factory).get(PagedTasksListViewModel.class);
 
         // Set the adapter and swipecontroller
-        Context context = view.getContext();
 
         final SwipeRefreshLayout swipeContainer = view.findViewById(R.id.swipeContainer);
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -105,23 +111,23 @@ public class TaskListFragment extends Fragment {
                 repository.getDSFactory().postLiveData.getValue().invalidate();
             }
         });
-
         swipeContainer.setColorSchemeColors(getResources().getColor(android.R.color.holo_red_dark));
+
         mRecyclerView = (RecyclerView) view.findViewById(R.id.list);
+        Context context = view.getContext();
         mLayoutManager = new LinearLayoutManager(context);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mAdapter = new TaskListAdapter();
         viewModel.pagedList.observe(getActivity(), new Observer<PagedList<Issue>>() {
             @Override
             public void onChanged(@Nullable PagedList<Issue> issues) {
+               // mProgressBar.setVisibility(View.GONE);
                 swipeContainer.setRefreshing(false);
                 mAdapter.submitList(issues);
 
             }
         });
         mRecyclerView.setAdapter(mAdapter);
-
-
 
         final SwipeController swipeController = new SwipeController(new SwipeControllerActions() {
             @Override
@@ -218,6 +224,11 @@ public class TaskListFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull TaskListViewHolder holder, int position) {
             holder.bind(getItem(position));
+        }
+
+        @Override
+        public void onViewAttachedToWindow(@NonNull TaskListViewHolder holder) {
+            mProgressBar.setVisibility(View.GONE);
         }
 
         public Issue getItemClicked(int position) {

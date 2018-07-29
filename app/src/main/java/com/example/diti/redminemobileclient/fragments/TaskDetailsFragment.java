@@ -36,7 +36,7 @@ import java.util.Date;
 public class TaskDetailsFragment extends Fragment {
 
     private static final String TAG = "TaskDetailsFragment";
-    private TextView mIDAndCRDate;
+    private TextView     mIDAndCRDate;
     private TextView     mProjectName;
     private TextView     mAuthor;
     private TextView     mStatus;
@@ -85,9 +85,9 @@ public class TaskDetailsFragment extends Fragment {
         mStatus = (TextView) v.findViewById(R.id.task_status);
         mProjectName = (TextView) v.findViewById(R.id.task_project_name);
         mSubject = (TextView) v.findViewById(R.id.task_subject);
-        mLinearLayoutHeader = (LinearLayout)v.findViewById(R.id.task_details_expanded_header);
-        mLinearLayoutExpanded1 = (LinearLayout)v.findViewById(R.id.task_details_expanded1);
-        mLinearLayoutExpanded2 = (LinearLayout)v.findViewById(R.id.task_details_expanded2);
+        mLinearLayoutHeader = (LinearLayout) v.findViewById(R.id.task_details_expanded_header);
+        mLinearLayoutExpanded1 = (LinearLayout) v.findViewById(R.id.task_details_expanded1);
+        mLinearLayoutExpanded2 = (LinearLayout) v.findViewById(R.id.task_details_expanded2);
 
         mIssueViewModel.getIssueLiveData().observe(getActivity(), new Observer<Issue>() {
             @Override
@@ -106,10 +106,10 @@ public class TaskDetailsFragment extends Fragment {
         mLinearLayoutHeader.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mLinearLayoutExpanded1.getVisibility()==View.GONE && mLinearLayoutExpanded2.getVisibility() == View.GONE){
+                if (mLinearLayoutExpanded1.getVisibility() == View.GONE &&
+                    mLinearLayoutExpanded2.getVisibility() == View.GONE) {
                     expand();
-                }
-                else{
+                } else {
                     collapse();
                 }
             }
@@ -119,7 +119,9 @@ public class TaskDetailsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 //TODO: try spannable to show images from description
-                File file = new File(getActivity().getCacheDir(), issue.getAttachments().get(0).getFilename());
+                File file = new File(getActivity().getCacheDir(), issue.getAttachments()
+                        .get(0)
+                        .getFilename());
 
                 Uri uri = FileProvider.getUriForFile(getActivity(), "be.myapplication", file);
 
@@ -154,7 +156,7 @@ public class TaskDetailsFragment extends Fragment {
 
         mAssignedTo.setText("Назначена: " + issue.getAssigned_to().getName());
         mAuthor.setText("Автор: " + issue.getAuthor().getName());
-        //mDescription.setText(issue.getDescription());
+        mDescription.setText(issue.getDescription());
         mEstimatedTime.setText("Оценка времени: " + issue.getEstimatedHours());
         mSpentHours.setText("Потрачено: " + issue.getSpent_hours().toString());
         mStatus.setText("Статус: " + issue.getStatus().getName());
@@ -197,15 +199,16 @@ public class TaskDetailsFragment extends Fragment {
         }
     }
 
-    private void expand(){
+    private void expand() {
         mLinearLayoutExpanded1.setVisibility(View.VISIBLE);
         mLinearLayoutExpanded2.setVisibility(View.VISIBLE);
     }
 
-    private void collapse(){
+    private void collapse() {
         mLinearLayoutExpanded1.setVisibility(View.GONE);
         mLinearLayoutExpanded2.setVisibility(View.GONE);
     }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
