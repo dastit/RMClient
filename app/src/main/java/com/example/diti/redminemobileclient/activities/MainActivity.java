@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.top_toolbar_menu, menu);
+        inflater.inflate(R.menu.main_activity_top_toolbar_menu, menu);
         return true;
     }
 

@@ -3,7 +3,6 @@ package com.example.diti.redminemobileclient.fragments;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -14,6 +13,8 @@ import android.support.v4.content.FileProvider;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -115,26 +116,6 @@ public class TaskDetailsFragment extends Fragment {
             }
         });
 
-        mIDAndCRDate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //TODO: try spannable to show images from description
-                File file = new File(getActivity().getCacheDir(), issue.getAttachments()
-                        .get(0)
-                        .getFilename());
-
-                Uri uri = FileProvider.getUriForFile(getActivity(), "be.myapplication", file);
-
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.addCategory(Intent.CATEGORY_DEFAULT);
-                intent.setDataAndType(uri, "image/*");
-
-                startActivity(intent);
-            }
-        });
-
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         Date date;
         Calendar cal = Calendar.getInstance();
@@ -163,33 +144,49 @@ public class TaskDetailsFragment extends Fragment {
         mProjectName.setText("Проект: " + issue.getProject().getName());
         mSubject.setText(issue.getSubject());
 
-        if(issue.getAttachments().size()!=0){
+        if (issue.getAttachments().size() != 0) {
             new AsyncTask<Issue, Void, SpannableStringBuilder>() {
-            @Override
+                @Override
                 protected SpannableStringBuilder doInBackground(Issue... issues) {
-                String text = issues[0].getDescription();
-                SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-                for (int i = 0; i<issues[0].getAttachments().size(); i++) {
-                    String name = issues[0].getAttachments().get(i).getFilename();
-                    if(text.contains(name)) {
-                        File file = new File(getActivity().getCacheDir(), name);
-                        Uri uri = FileProvider.getUriForFile(getActivity(), "be.myapplication", file);
-                        int firstIndex = text.indexOf(name)-1;        //с учетом восклицательных знаков
-                        int lastIndex = firstIndex + name.length()+1; //по обеим сторонам от названия
-                        ImageSpan imageSpan = null;
-                        Bitmap bitmap = null;
-                        try {
-                            bitmap = Picasso.get().load(uri).get();
-                            bitmap = Bitmap.createScaledBitmap(bitmap,getView().getWidth(),bitmap.getHeight(),true);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                    String text = issues[0].getDescription();
+                    SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+                    for (int i = 0; i < issues[0].getAttachments().size(); i++) {
+                        String name = issues[0].getAttachments().get(i).getFilename();
+                        if (text.contains(name)) {
+                            File file;
+                            Uri uri;
+                            try {
+                                file = new File(getActivity().getCacheDir(), name);
+                                uri = FileProvider.getUriForFile(getActivity(), "be.myapplication", file);
+                            } catch (NullPointerException npe) {
+                                getActivity().finish();
+                                break;
+                            }
+                            int firstIndex = text.indexOf(name) -
+                                             1;        //единички учитывают восклицательные знаки
+                            int lastIndex = firstIndex + name.length() +
+                                            1; //по обеим сторонам от названия картинки
+                            ImageSpan imageSpan = null;
+                            Bitmap bitmap = null;
+                            try {
+                                bitmap = Picasso.get().load(uri).get();
+                                DisplayMetrics displayMetrics = new DisplayMetrics();
+                                getActivity().getWindowManager()
+                                        .getDefaultDisplay()
+                                        .getMetrics(displayMetrics);
+                                int width = displayMetrics.widthPixels;
+                                Log.d(TAG, "view width = " + width);
+                                Log.d(TAG, "bitmap heigh = " + bitmap.getHeight());
+                                bitmap = Bitmap.createScaledBitmap(bitmap, width, bitmap.getHeight(), true);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            imageSpan = new ImageSpan(getActivity(), bitmap);
+                            ssb.setSpan(imageSpan, firstIndex, lastIndex, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
                         }
-                        imageSpan = new ImageSpan(getActivity(), bitmap);
-                        ssb.setSpan(imageSpan, firstIndex, lastIndex, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
                     }
+                    return ssb;
                 }
-                return ssb;
-            }
 
                 @Override
                 protected void onPostExecute(SpannableStringBuilder spannableStringBuilder) {

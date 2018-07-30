@@ -48,7 +48,14 @@
                 android:resource="@xml/authenticator" />
         </service>
 
-        <activity android:name=".activities.TaskActivity"></activity>
+        <activity android:name=".activities.TaskActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:parentActivityName="com.example.diti.redminemobileclient.activities.MainActivity" >
+        <!-- Parent activity meta-data to support 4.0 and lower -->
+        <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value="com.example.diti.redminemobileclient.activities.MainActivity" />
+        </activity>
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="be.myapplication"

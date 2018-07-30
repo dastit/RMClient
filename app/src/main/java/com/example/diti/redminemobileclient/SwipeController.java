@@ -1,21 +1,20 @@
 package com.example.diti.redminemobileclient;
 
 import android.content.Context;
-import android.content.res.Resources;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 
-import static android.support.v7.widget.helper.ItemTouchHelper.*;
+import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_SWIPE;
+import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
 
 enum ButtonsState {
     GONE,
@@ -87,6 +86,8 @@ public class SwipeController extends ItemTouchHelper.Callback {
     }
 
     private void drawButtons(Canvas c, RecyclerView.ViewHolder viewHolder) {
+        TextView idView = (TextView) viewHolder.itemView.findViewById(R.id.task_id);
+        Integer id = Integer.parseInt(idView.getText().toString());
 
         View itemView = viewHolder.itemView;
         Paint p = new Paint();
@@ -97,8 +98,14 @@ public class SwipeController extends ItemTouchHelper.Callback {
         int color = ContextCompat.getColor(mContext, R.color.colorGreyBackground);
         p.setColor(color);
         c.drawRect(rightButton, p);
-
-        Drawable timer = ContextCompat.getDrawable(mContext, R.drawable.outline_timer_24);
+        Drawable timer;
+        SharedPreferences sharedPreferences = mContext.getSharedPreferences(mContext.getString(R.string.preference_file_key), mContext.MODE_PRIVATE);
+        if (sharedPreferences.getInt(mContext.getString(R.string.task_id_started_key), 0) == id) {
+             timer = ContextCompat.getDrawable(mContext, R.drawable.outline_timer_off_24);
+        }
+        else{
+            timer = ContextCompat.getDrawable(mContext, R.drawable.outline_timer_24);
+        }
         int centerX = (int) rightButton.centerX();
         int centerY = (int) rightButton.centerY();
         timer.setBounds(centerX-40, centerY-40, centerX+40, centerY+40);

@@ -10,6 +10,7 @@ import android.arch.paging.PagedList;
 import android.arch.paging.PagedListAdapter;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.os.Build;
@@ -30,12 +31,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.SwipeController;
 import com.example.diti.redminemobileclient.SwipeControllerActions;
-import com.example.diti.redminemobileclient.activities.MainActivity;
 import com.example.diti.redminemobileclient.activities.TaskActivity;
 import com.example.diti.redminemobileclient.datasources.PagedTaskListRepository;
 import com.example.diti.redminemobileclient.datasources.PagedTasksListViewModel;
@@ -121,7 +120,6 @@ public class TaskListFragment extends Fragment {
         viewModel.pagedList.observe(getActivity(), new Observer<PagedList<Issue>>() {
             @Override
             public void onChanged(@Nullable PagedList<Issue> issues) {
-               // mProgressBar.setVisibility(View.GONE);
                 swipeContainer.setRefreshing(false);
                 mAdapter.submitList(issues);
 
@@ -132,9 +130,14 @@ public class TaskListFragment extends Fragment {
         final SwipeController swipeController = new SwipeController(new SwipeControllerActions() {
             @Override
             public void onRightClicked(int position) {
-                Toast.makeText(getActivity(), "нажата кнопка " + position, Toast.LENGTH_LONG)
-                        .show();
                 Issue mIssue = mAdapter.getItemClicked(position);
+                Context context = getActivity().getApplicationContext();
+                SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.preference_file_key), context.MODE_PRIVATE);
+                //TODO: добавить остановку таймера и запрет на запуск еще одного задания на обработку
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt(getString(R.string.task_id_started_key), mIssue.getIssueid());
+                editor.putLong(getString(R.string.task_time_started_key), new Date().getTime());
+                editor.commit();
                 createNotification(mIssue);
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
                 notificationManager.notify(111, notification);
@@ -160,8 +163,6 @@ public class TaskListFragment extends Fragment {
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
             NotificationManager notificationManager = getActivity().getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
             notificationBuilder = new NotificationCompat.Builder(getActivity(), CHANNEL_ID).setSmallIcon(R.drawable.outline_timer_24)
@@ -173,11 +174,15 @@ public class TaskListFragment extends Fragment {
                     .setContentText(mIssue.getSubject());
         }
 
-        Intent playIntent = new Intent(getActivity(), MainActivity.class);
+        Intent playIntent = new Intent(getActivity(), TaskActivity.class);
+        playIntent.putExtra(TaskActivity.EXTRA_ISSUE_ID, mIssue.getIssueid());
+        playIntent.putExtra(TaskActivity.EXTRA_TOKEN, mAuthToken);
+        playIntent.putExtra(TaskActivity.IS_TASK_STOPED_FROM_NOTIFICATION, true);
         playIntent.setAction(ACTION_STOP);
         PendingIntent pendingPlayIntent = PendingIntent.getActivity(getActivity(), 0, playIntent, 0);
         NotificationCompat.Action playAction = new NotificationCompat.Action(R.drawable.outline_stop_24, "Stop", pendingPlayIntent);
         notificationBuilder.addAction(playAction);
+        notificationBuilder.setAutoCancel(true);
 
         notification = notificationBuilder.build();
     }
@@ -242,6 +247,7 @@ public class TaskListFragment extends Fragment {
             public TextView  mTaskProject;
             public ImageView mProjectFirstLetterImageView;
             public TextView  mProjectFirstLetterTextView;
+            public TextView mTaskId;
 
 
             public TaskListViewHolder(View itemView) {
@@ -254,6 +260,7 @@ public class TaskListFragment extends Fragment {
                 mTaskProject.setMaxWidth(screenWidth / 3);
                 mProjectFirstLetterImageView = itemView.findViewById(R.id.project_letter_image_view);
                 mProjectFirstLetterTextView = itemView.findViewById(R.id.project_letter_text_view);
+                mTaskId = itemView.findViewById(R.id.task_id);
 
 
             }
@@ -292,6 +299,7 @@ public class TaskListFragment extends Fragment {
                             startActivity(intent);
                         }
                     });
+                    mTaskId.setText(issue.getIssueid().toString());
                     mTaskSubject.setText(issue.getSubject());
                     mTaskProject.setText(issue.getProject().getName());
                     String projectName = issue.getProject().getName().substring(0, 1);

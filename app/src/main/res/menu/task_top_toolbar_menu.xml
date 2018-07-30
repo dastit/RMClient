@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/task_attachments"
+        android:icon="@drawable/outline_attach_file_24"
+        android:title="@string/task_attachments"
+        app:showAsAction="ifRoom">
+    </item>
+    <item
+        android:id="@+id/task_start_timer"
+        android:icon="@drawable/outline_timer_24"
+        android:title="@string/task_start_timer"
+        app:showAsAction="ifRoom">
+    </item>
+    <item
+        android:id="@+id/task_stop_timer"
+        android:icon="@drawable/outline_timer_off_24"
+        android:title="@string/task_stop_timer"
+        app:showAsAction="ifRoom"
+        android:visible="false">
+    </item>
+</menu>

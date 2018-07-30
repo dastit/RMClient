@@ -116,13 +116,25 @@ public class IssueRepository {
     }
 
     private boolean isExpired(Issue issue) {
-//        if (issue == null || issue.getLast_request_time_in_milliseconds() == 0 ||
-//            issue.getLast_request_time_in_milliseconds() <
-//            System.currentTimeMillis() - (10 * 60 * 1000)) {
-//            return true;
-//        }
-//        return false;
-        return true;
+        if (issue == null || issue.getLast_request_time_in_milliseconds() == 0 ||
+            issue.getLast_request_time_in_milliseconds() <
+            System.currentTimeMillis() - (10 * 60 * 1000)) {
+            return true;
+        }
+        int flag = 0;
+        for (int i=0; i<issue.getAttachments().size(); i++) {
+            for (String name:mContext.getCacheDir().list()) {
+                String attachmentName=issue.getAttachments().get(i).getFilename();
+                if(attachmentName.equals(name)){
+                    flag++;
+                    break;
+                }
+            }
+        }
+        if(flag < issue.getAttachments().size()){
+            return true;
+        }
+        return false;
     }
-
+//TODO: предусмотреть что в аттаче могут быть не только картинки, но и доки и PDF
 }
