@@ -115,7 +115,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
             showProgress(true);
 
 
-            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(login, password);
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(login, password, getCacheDir());
             Call<Users> call =
                     client.reposForUser();
             call.enqueue(new Callback<Users>() {

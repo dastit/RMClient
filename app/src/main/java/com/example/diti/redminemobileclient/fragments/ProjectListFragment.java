@@ -18,10 +18,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.diti.redminemobileclient.R;
+import com.example.diti.redminemobileclient.datasources.PagedProjectListRepository;
 import com.example.diti.redminemobileclient.datasources.PagedProjectListViewModel;
 import com.example.diti.redminemobileclient.datasources.PagedProjectListViewModelFactory;
-
-import com.example.diti.redminemobileclient.datasources.PagedProjectListRepository;
 import com.example.diti.redminemobileclient.model.Project;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
@@ -62,7 +61,7 @@ public class ProjectListFragment extends Fragment {
         if (getArguments() != null) {
             mAuthToken = getArguments().getString(ARG_TOKEN);
         }
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "");
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "", getActivity().getCacheDir());
         PagedProjectListRepository mPagedProjectListRepository = new PagedProjectListRepository(client);
         PagedProjectListViewModelFactory factory = new PagedProjectListViewModelFactory(mPagedProjectListRepository);
         viewModel = ViewModelProviders.of(this, factory).get(PagedProjectListViewModel.class);

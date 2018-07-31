@@ -5,6 +5,8 @@ import com.example.diti.redminemobileclient.model.Issues;
 import com.example.diti.redminemobileclient.model.Projects;
 import com.example.diti.redminemobileclient.model.Users;
 
+import java.io.File;
+
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -14,12 +16,12 @@ import retrofit2.http.Url;
 
 public class RedmineRestApiClient {
 
-    public static RedmineClient getRedmineClient(String login, String password) {
-        return ServiceGenerator.createService(RedmineClient.class, login, password);
+    public static RedmineClient getRedmineClient(String login, String password, File cachePath) {
+        return ServiceGenerator.createService(RedmineClient.class, login, password, cachePath);
     }
 
-    public static RedmineClient getRedmineClient(String authToken) {
-        return ServiceGenerator.createService(RedmineClient.class, authToken);
+    public static RedmineClient getRedmineClient(String authToken, File cachePath) {
+        return ServiceGenerator.createService(RedmineClient.class, authToken, cachePath);
     }
 
     public interface RedmineClient {

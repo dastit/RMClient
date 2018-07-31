@@ -56,7 +56,7 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
 
         //если токен не закэшировался при создании аккаунта - запрашиваем токен опять по логину паролю
         if(TextUtils.isEmpty(authToken)){
-            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(account.name, am.getPassword(account));
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(account.name, am.getPassword(account), mContext.getCacheDir());
             Call<Users> call =
                     client.reposForUser();
             try {

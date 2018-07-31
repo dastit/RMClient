@@ -31,6 +31,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.SwipeController;
@@ -70,7 +71,7 @@ public class TaskListFragment extends Fragment {
 
     public TaskListFragment() {
     }
-
+//TODO: прикрепить запущенную задачу к верху страницы
     public static TaskListFragment newInstance(String token) {
         TaskListFragment fragment = new TaskListFragment();
         Bundle args = new Bundle();
@@ -96,7 +97,7 @@ public class TaskListFragment extends Fragment {
         mProgressBar.setVisibility(View.VISIBLE);
 
 
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "");
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "", getActivity().getCacheDir());
         repository = new PagedTaskListRepository(client);
         PagedTasksListViewModelFactory factory = new PagedTasksListViewModelFactory(repository);
         viewModel = ViewModelProviders.of(this, factory).get(PagedTasksListViewModel.class);
@@ -133,14 +134,25 @@ public class TaskListFragment extends Fragment {
                 Issue mIssue = mAdapter.getItemClicked(position);
                 Context context = getActivity().getApplicationContext();
                 SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.preference_file_key), context.MODE_PRIVATE);
-                //TODO: добавить остановку таймера и запрет на запуск еще одного задания на обработку
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putInt(getString(R.string.task_id_started_key), mIssue.getIssueid());
-                editor.putLong(getString(R.string.task_time_started_key), new Date().getTime());
-                editor.commit();
-                createNotification(mIssue);
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
-                notificationManager.notify(111, notification);
+                if(sharedPreferences.contains(getString(R.string.task_id_started_key))){
+                    int savedId = sharedPreferences.getInt(getString(R.string.task_id_started_key), 0);
+                    if(sharedPreferences.getInt(getString(R.string.task_id_started_key), 0)== mIssue.getIssueid()){
+                        TaskStopDialog dialog  = new TaskStopDialog();
+                        dialog.show(getActivity().getSupportFragmentManager(), "TaskStopDialog");
+                    }
+                    else{
+                        Toast.makeText(getActivity(), "Закончите выполнение задачи №"+savedId+" прежде чем запускать новую", Toast.LENGTH_LONG).show();
+                    }
+                }
+                else{
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putInt(getString(R.string.task_id_started_key), mIssue.getIssueid());
+                    editor.putLong(getString(R.string.task_time_started_key), new Date().getTime());
+                    editor.commit();
+                    createNotification(mIssue);
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
+                    notificationManager.notify(111, notification);
+                }
             }
         }, getActivity());
         itemTouchHelper = new ItemTouchHelper(swipeController);

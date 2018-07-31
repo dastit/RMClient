@@ -1,4 +1,4 @@
-package com.example.diti.redminemobileclient.authenticator;
+package com.example.diti.redminemobileclient.retrofit;
 
 
 import java.io.IOException;

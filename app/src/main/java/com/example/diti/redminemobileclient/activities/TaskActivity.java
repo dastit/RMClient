@@ -74,7 +74,7 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
         mDatabase = Room.databaseBuilder(getApplicationContext(), IssueDatabase.class, "issue")
                 .fallbackToDestructiveMigration()
                 .build();
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "");
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "", getCacheDir());
         IssueRepository repository = new IssueRepository(client, mDatabase.mIssueDao(), this);
         IssueViewModelFactory factory = new IssueViewModelFactory(repository);
         mIssueViewModel = ViewModelProviders.of(this, factory).get(IssueViewModel.class);
@@ -201,14 +201,7 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
 
     @Override
     public void OnDialogIteration() {
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        notificationManager.cancel(111);
-        notificationManager.cancel(000);
-        sharedPreferences = getApplicationContext().getSharedPreferences(getString(R.string.preference_file_key), getApplicationContext().MODE_PRIVATE);
-        editor = sharedPreferences.edit();
-        editor.remove(getString(R.string.task_id_started_key));
-        editor.remove(getString(R.string.task_time_started_key));
-        editor.commit();
+
         invalidateOptionsMenu();
     }
 

@@ -11,6 +11,7 @@ import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 import java.io.IOException;
 
 import retrofit2.Call;
+import retrofit2.Response;
 
 public class PositionalTaskDataSource extends PositionalDataSource<Issue> {
 
@@ -49,7 +50,15 @@ public class PositionalTaskDataSource extends PositionalDataSource<Issue> {
 //            }
 //        });
         try {
-            result = call.execute().body();
+            Response response = call.execute();
+            if (response.raw().cacheResponse() != null) {
+                Log.d(TAG, "used cache");
+            }
+
+            if (response.raw().networkResponse() != null) {
+                Log.d(TAG, "used network");
+            }
+            result = (Issues) response.body();
         } catch (IOException e) {
             e.printStackTrace();
         }
