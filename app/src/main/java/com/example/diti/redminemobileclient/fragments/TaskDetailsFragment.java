@@ -14,13 +14,13 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.IssueViewModel;
 import com.example.diti.redminemobileclient.model.Issue;
@@ -28,10 +28,6 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 
 
 public class TaskDetailsFragment extends Fragment {
@@ -95,6 +91,9 @@ public class TaskDetailsFragment extends Fragment {
             public void onChanged(@Nullable Issue issue) {
                 if (issue != null) {
                     setInterface(issue);
+                    if (mListener != null) {
+                        mListener.onFragmentInteraction(issue);
+                    }
                 }
             }
         });
@@ -116,25 +115,7 @@ public class TaskDetailsFragment extends Fragment {
             }
         });
 
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        Date date;
-        Calendar cal = Calendar.getInstance();
-        try {
-            date = formatter.parse(issue.getCreatedOn().replaceAll("Z$", "+0000"));
-            cal.setTime(date);
-            int day = cal.get(Calendar.DATE);
-            int month = cal.get(Calendar.MONTH);
-            int year = cal.get(Calendar.YEAR);
-            int hours = cal.get(Calendar.HOUR_OF_DAY);
-            int minutes = cal.get(Calendar.MINUTE);
-            mIDAndCRDate.setText(
-                    "Задача № " + issue.getIssueid() + " от " + day + "." + month + "." + year +
-                    " " + hours + ":" + minutes);
-        } catch (ParseException e) {
-            mIDAndCRDate.setText("Задача № " + issue.getIssueid());
-            e.printStackTrace();
-        }
-
+        mIDAndCRDate.setText("Задача №"+issue.getIssueid()+" от "+DateConverter.getDate(issue.getCreatedOn()));
         mAssignedTo.setText("Назначена: " + issue.getAssigned_to().getName());
         mAuthor.setText("Автор: " + issue.getAuthor().getName());
         mDescription.setText(issue.getDescription());
@@ -174,9 +155,7 @@ public class TaskDetailsFragment extends Fragment {
                                 getActivity().getWindowManager()
                                         .getDefaultDisplay()
                                         .getMetrics(displayMetrics);
-                                int width = displayMetrics.widthPixels;
-                                Log.d(TAG, "view width = " + width);
-                                Log.d(TAG, "bitmap heigh = " + bitmap.getHeight());
+                                int width = Math.min(displayMetrics.widthPixels, bitmap.getWidth());
                                 bitmap = Bitmap.createScaledBitmap(bitmap, width, bitmap.getHeight(), true);
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -224,7 +203,7 @@ public class TaskDetailsFragment extends Fragment {
     }
 
     public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri uri);
+        void onFragmentInteraction(Issue issue);
     }
 
 }

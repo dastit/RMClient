@@ -33,6 +33,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.SwipeController;
 import com.example.diti.redminemobileclient.SwipeControllerActions;
@@ -42,11 +43,6 @@ import com.example.diti.redminemobileclient.datasources.PagedTasksListViewModel;
 import com.example.diti.redminemobileclient.datasources.PagedTasksListViewModelFactory;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 
 public class TaskListFragment extends Fragment {
 
@@ -67,11 +63,12 @@ public class TaskListFragment extends Fragment {
     private NotificationCompat.Builder        notificationBuilder;
     private Notification                      notification;
     private PagedTaskListRepository           repository;
-    private ProgressBar mProgressBar;
+    private ProgressBar                       mProgressBar;
 
     public TaskListFragment() {
     }
-//TODO: прикрепить запущенную задачу к верху страницы
+
+    //TODO: прикрепить запущенную задачу к верху страницы
     public static TaskListFragment newInstance(String token) {
         TaskListFragment fragment = new TaskListFragment();
         Bundle args = new Bundle();
@@ -97,7 +94,8 @@ public class TaskListFragment extends Fragment {
         mProgressBar.setVisibility(View.VISIBLE);
 
 
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "", getActivity().getCacheDir());
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "", getActivity()
+                .getCacheDir());
         repository = new PagedTaskListRepository(client);
         PagedTasksListViewModelFactory factory = new PagedTasksListViewModelFactory(repository);
         viewModel = ViewModelProviders.of(this, factory).get(PagedTasksListViewModel.class);
@@ -134,20 +132,21 @@ public class TaskListFragment extends Fragment {
                 Issue mIssue = mAdapter.getItemClicked(position);
                 Context context = getActivity().getApplicationContext();
                 SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.preference_file_key), context.MODE_PRIVATE);
-                if(sharedPreferences.contains(getString(R.string.task_id_started_key))){
+                if (sharedPreferences.contains(getString(R.string.task_id_started_key))) {
                     int savedId = sharedPreferences.getInt(getString(R.string.task_id_started_key), 0);
-                    if(sharedPreferences.getInt(getString(R.string.task_id_started_key), 0)== mIssue.getIssueid()){
-                        TaskStopDialog dialog  = new TaskStopDialog();
+                    if (sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) ==
+                        mIssue.getIssueid()) {
+                        TaskStopDialog dialog = new TaskStopDialog();
                         dialog.show(getActivity().getSupportFragmentManager(), "TaskStopDialog");
+                    } else {
+                        Toast.makeText(getActivity(), "Закончите выполнение задачи №" + savedId +
+                                                      " прежде чем запускать новую", Toast.LENGTH_LONG)
+                                .show();
                     }
-                    else{
-                        Toast.makeText(getActivity(), "Закончите выполнение задачи №"+savedId+" прежде чем запускать новую", Toast.LENGTH_LONG).show();
-                    }
-                }
-                else{
+                } else {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putInt(getString(R.string.task_id_started_key), mIssue.getIssueid());
-                    editor.putLong(getString(R.string.task_time_started_key), new Date().getTime());
+                    editor.putLong(getString(R.string.task_time_started_key), System.currentTimeMillis());
                     editor.commit();
                     createNotification(mIssue);
                     NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
@@ -259,7 +258,7 @@ public class TaskListFragment extends Fragment {
             public TextView  mTaskProject;
             public ImageView mProjectFirstLetterImageView;
             public TextView  mProjectFirstLetterTextView;
-            public TextView mTaskId;
+            public TextView  mTaskId;
 
 
             public TaskListViewHolder(View itemView) {
@@ -283,23 +282,8 @@ public class TaskListFragment extends Fragment {
                     mTaskCreationDate.setText("");
                     mTaskProject.setText("");
                 } else {
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-                    Date date;
-                    Calendar cal = Calendar.getInstance();
-                    try {
-                        date = formatter.parse(issue.getCreatedOn().replaceAll("Z$", "+0000"));
-                        cal.setTime(date);
-                        int day = cal.get(Calendar.DATE);
-                        int month = cal.get(Calendar.MONTH);
-                        int year = cal.get(Calendar.YEAR);
-                        int hours = cal.get(Calendar.HOUR_OF_DAY);
-                        int minutes = cal.get(Calendar.MINUTE);
-                        mTaskCreationDate.setText(
-                                day + "." + month + "." + year + " " + hours + ":" + minutes);
-                    } catch (ParseException e) {
-                        date = new Date();
-                        e.printStackTrace();
-                    }
+
+                    mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
                     itemView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {

@@ -18,6 +18,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +26,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SubMenu;
+import android.webkit.MimeTypeMap;
 
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.IssueDatabase;
@@ -34,9 +37,13 @@ import com.example.diti.redminemobileclient.datasources.IssueViewModelFactory;
 import com.example.diti.redminemobileclient.fragments.TaskCommentsFragment;
 import com.example.diti.redminemobileclient.fragments.TaskDetailsFragment;
 import com.example.diti.redminemobileclient.fragments.TaskStopDialog;
+import com.example.diti.redminemobileclient.model.Issue;
+import com.example.diti.redminemobileclient.model.IssueAttachment;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
-import java.util.Date;
+import java.io.File;
+import java.util.List;
+import java.util.Random;
 
 
 public class TaskActivity extends AppCompatActivity implements TaskDetailsFragment.OnFragmentInteractionListener, TaskCommentsFragment.OnListFragmentInteractionListener, TaskStopDialog.OnDialogIterationListener {
@@ -58,6 +65,8 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     private SharedPreferences        sharedPreferences;
     private SharedPreferences.Editor editor;
     private Integer                  issueId;
+    private Issue                    mIssue;
+    String uniqueIdPrefix;
     private int pages = 2;
     private  boolean                    isStopedFromNotificaton;
     private NotificationCompat.Builder notificationBuilder;
@@ -125,6 +134,19 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.task_top_toolbar_menu, menu);
+
+        if(mIssue != null &&  mIssue.getAttachments().size() != 0){
+            Random rand = new Random();
+            uniqueIdPrefix = String.valueOf(rand.nextInt(89) + 10);
+            List<IssueAttachment> attachmentsList = mIssue.getAttachments();
+            MenuItem item = menu.findItem(R.id.task_attachments);
+            SubMenu attachments = item.getSubMenu();
+            attachments.clear();
+            for(int i = 0; i < attachmentsList.size(); i++){
+                int itemId = Integer.parseInt(uniqueIdPrefix + 1);
+                attachments.add(0, itemId, 0, attachmentsList.get(i).getFilename());
+            }
+        }
         return true;
     }
 
@@ -135,7 +157,7 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
                 sharedPreferences = getApplicationContext().getSharedPreferences(getString(R.string.preference_file_key), getApplicationContext().MODE_PRIVATE);
                 editor = sharedPreferences.edit();
                 editor.putInt(getString(R.string.task_id_started_key), issueId);
-                editor.putLong(getString(R.string.task_time_started_key), new Date().getTime());
+                editor.putLong(getString(R.string.task_time_started_key), System.currentTimeMillis());
                 editor.commit();
                 createNotification(issueId);
                 invalidateOptionsMenu();
@@ -143,10 +165,22 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
             case R.id.task_stop_timer:
                 startDialog();
                 return true;
-            case R.id.task_attachments:
-                //TODO: add attachments view
             default:
-                return super.onOptionsItemSelected(item);
+                if(String.valueOf(item.getItemId()).startsWith(String.valueOf(uniqueIdPrefix))){
+                    File file = new File(getCacheDir(), item.getTitle().toString());
+                    Uri uri = FileProvider.getUriForFile(this, "be.myapplication", file);
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    MimeTypeMap myMime = MimeTypeMap.getSingleton();
+                    String mimeType = myMime.getMimeTypeFromExtension(file.getName().substring(file.getName().lastIndexOf(".") + 1));
+                    intent.setDataAndType(uri, mimeType);
+                    startActivity(intent);
+                    return true;
+                }
+                else{
+                    return super.onOptionsItemSelected(item);
+                }
         }
     }
 
@@ -188,6 +222,7 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+
         sharedPreferences = getApplicationContext().getSharedPreferences(getString(R.string.preference_file_key), getApplicationContext().MODE_PRIVATE);
         if (sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) == issueId) {
             menu.findItem(R.id.task_start_timer).setVisible(false);
@@ -237,8 +272,9 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
+    public void onFragmentInteraction(Issue issue) {
+        mIssue = issue;
+        invalidateOptionsMenu();
     }
 
     @Override

@@ -17,17 +17,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.PagedProjectListRepository;
 import com.example.diti.redminemobileclient.datasources.PagedProjectListViewModel;
 import com.example.diti.redminemobileclient.datasources.PagedProjectListViewModelFactory;
 import com.example.diti.redminemobileclient.model.Project;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 
 
 public class ProjectListFragment extends Fragment {
@@ -155,23 +151,7 @@ public class ProjectListFragment extends Fragment {
                     mTaskCreationDate.setText("");
                     mTaskProject.setText("");
                 } else {
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-                    Date date;
-                    Calendar cal = Calendar.getInstance();
-                    try {
-                        date = formatter.parse(project.getCreatedOn().replaceAll("Z$", "+0000"));
-                        cal.setTime(date);
-                        int day = cal.get(Calendar.DATE);
-                        int month = cal.get(Calendar.MONTH);
-                        int year = cal.get(Calendar.YEAR);
-                        int hours = cal.get(Calendar.HOUR_OF_DAY);
-                        int minutes = cal.get(Calendar.MINUTE);
-                        mTaskCreationDate.setText(
-                                day + "." + month + "." + year + " " + hours + ":" + minutes);
-                    } catch (ParseException e) {
-                        date = new Date();
-                        e.printStackTrace();
-                    }
+                    mTaskCreationDate.setText(DateConverter.getDate(project.getCreatedOn()));
                     mTaskSubject.setText(project.getName());
                     mTaskProject.setText("");
 
