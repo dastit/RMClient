@@ -62,12 +62,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/task_id"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:visibility="gone" />
+
                 <!-- TextView Task Creation Date -->
                 <TextView
                     android:id="@+id/task_date"
@@ -80,6 +75,14 @@
                     android:textAlignment="gravity"
                     android:textSize="8sp"
                     tool:text="1.1.2018 13:24" />
+
+                <TextView
+                    android:id="@+id/task_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textAlignment="gravity"
+                    android:textSize="8sp"/>
 
                 <!-- TextView Task Project -->
                 <TextView

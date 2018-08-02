@@ -64,6 +64,8 @@ public class TaskListFragment extends Fragment {
     private Notification                      notification;
     private PagedTaskListRepository           repository;
     private ProgressBar                       mProgressBar;
+    private SharedPreferences                 mSharedPreferences;
+    private SharedPreferences.Editor          mEditor;
 
     public TaskListFragment() {
     }
@@ -83,6 +85,7 @@ public class TaskListFragment extends Fragment {
         setRetainInstance(true);
         mAuthToken = getArguments().getString(ARG_TOKEN);
 
+        mSharedPreferences = getActivity().getSharedPreferences(getString(R.string.preference_file_key), getActivity().MODE_PRIVATE);
 
     }
 
@@ -132,17 +135,13 @@ public class TaskListFragment extends Fragment {
                 Issue mIssue = mAdapter.getItemClicked(position);
                 Context context = getActivity().getApplicationContext();
                 SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.preference_file_key), context.MODE_PRIVATE);
-                if (sharedPreferences.contains(getString(R.string.task_id_started_key))) {
-                    int savedId = sharedPreferences.getInt(getString(R.string.task_id_started_key), 0);
-                    if (sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) ==
-                        mIssue.getIssueid()) {
-                        TaskStopDialog dialog = new TaskStopDialog();
-                        dialog.show(getActivity().getSupportFragmentManager(), "TaskStopDialog");
-                    } else {
-                        Toast.makeText(getActivity(), "Закончите выполнение задачи №" + savedId +
-                                                      " прежде чем запускать новую", Toast.LENGTH_LONG)
-                                .show();
-                    }
+                if (sharedPreferences.contains(getString(R.string.task_id_started_key)) &&
+                    sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) !=
+                    mIssue.getIssueid()) {
+                    Toast.makeText(getActivity(), "Закончите выполнение задачи №" +
+                                                  sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) +
+                                                  " прежде чем запускать новую", Toast.LENGTH_LONG)
+                            .show();
                 } else {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putInt(getString(R.string.task_id_started_key), mIssue.getIssueid());
@@ -151,6 +150,10 @@ public class TaskListFragment extends Fragment {
                     createNotification(mIssue);
                     NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
                     notificationManager.notify(111, notification);
+                    if (mListener != null) {
+                        mListener.invalidateFreezedTask();
+                    }
+                    mAdapter.notifyDataSetChanged();
                 }
             }
         }, getActivity());
@@ -218,7 +221,9 @@ public class TaskListFragment extends Fragment {
 
     //интерфейс взаимодействия с хостовой активностью
     public interface OnListFragmentInteractionListener {
-        void onTaskListFragmentInteraction();
+        void showFreezedTask(Issue issue);
+
+        void invalidateFreezedTask();
     }
 
     //класс адаптера
@@ -240,6 +245,7 @@ public class TaskListFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull TaskListViewHolder holder, int position) {
             holder.bind(getItem(position));
+
         }
 
         @Override
@@ -248,6 +254,7 @@ public class TaskListFragment extends Fragment {
         }
 
         public Issue getItemClicked(int position) {
+
             return getItem(position);
         }
 
@@ -277,12 +284,22 @@ public class TaskListFragment extends Fragment {
             }
 
             public void bind(Issue issue) {
+
                 if (issue == null) {
                     mTaskSubject.setText(R.string.waiting_for_information);
                     mTaskCreationDate.setText("");
                     mTaskProject.setText("");
                 } else {
-
+                    if (issue.getIssueid() ==
+                        mSharedPreferences.getInt(getString(R.string.task_id_started_key), 0)) {
+                        itemView.setVisibility(View.GONE);
+                        itemView.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
+                        if (mSharedPreferences.contains(getString(R.string.task_id_started_key)) &&
+                            mListener != null) {
+                            mListener.showFreezedTask(issue);
+                        }
+                        return;
+                    }
                     mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
                     itemView.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -295,7 +312,7 @@ public class TaskListFragment extends Fragment {
                             startActivity(intent);
                         }
                     });
-                    mTaskId.setText(issue.getIssueid().toString());
+                    mTaskId.setText("# " + issue.getIssueid().toString());
                     mTaskSubject.setText(issue.getSubject());
                     mTaskProject.setText(issue.getProject().getName());
                     String projectName = issue.getProject().getName().substring(0, 1);

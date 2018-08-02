@@ -6,6 +6,7 @@ import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -15,24 +16,30 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.authenticator.RedmineAccount;
 import com.example.diti.redminemobileclient.fragments.AccountListFragment;
 import com.example.diti.redminemobileclient.fragments.ProjectListFragment;
 import com.example.diti.redminemobileclient.fragments.TaskListFragment;
+import com.example.diti.redminemobileclient.fragments.TaskStopDialog;
+import com.example.diti.redminemobileclient.model.Issue;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity implements AccountListFragment.AccountListListener, TaskListFragment.OnListFragmentInteractionListener, ProjectListFragment.OnListFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements AccountListFragment.AccountListListener, TaskListFragment.OnListFragmentInteractionListener, ProjectListFragment.OnListFragmentInteractionListener, TaskStopDialog.OnDialogIterationListener {
     private static final String TAG                       = "MainActivity";
     private static final String STATE_AUTH_TOKEN          = "state_auth_token";
     private static final String PROJECT_LIST_FRAGMENT_TAG = "projectList";
@@ -45,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     private Toolbar             topToolbar;
     private ActionBar           ab;
     private String              authToken;
+    private Issue mIssue;
+    private CardView mFreezedIssue;
 
     private boolean isAuthNeeded = true;
 
@@ -54,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
         setContentView(R.layout.activity_main);
         initToolbars(savedInstanceState);
         mProgressView = findViewById(R.id.central_fragment_progress);
-
+        mFreezedIssue = (CardView)findViewById(R.id.freezed_issue);
 
 
         if (savedInstanceState != null) {
@@ -232,13 +241,59 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
 
     //методы для фрагмента TaskListFragment
     @Override
-    public void onTaskListFragmentInteraction() {
+    public void showFreezedTask(Issue issue) {
+        mIssue = issue;
+        mFreezedIssue.setVisibility(View.VISIBLE);
+        TextView mTaskSubject = (TextView)findViewById(R.id.f_task_subject);
+        TextView  mTaskCreationDate = (TextView)findViewById(R.id.f_task_date);
+        TextView  mTaskProject = (TextView)findViewById(R.id.f_task_project);
+        TextView  mProjectFirstLetterTextView = (TextView)findViewById(R.id.f_project_letter_text_view);
+        TextView  mTaskId = (TextView)findViewById(R.id.f_task_id);
+        ImageButton mStopTimerButton = (ImageButton)findViewById(R.id.f_stop_timer_button);
 
+        mStopTimerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TaskStopDialog dialog  = new TaskStopDialog();
+                dialog.show(getSupportFragmentManager(), "TaskStopDialog");
+            }
+        });
+        mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
+        mFreezedIssue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(MainActivity.this, TaskActivity.class);
+                Integer issueId = issue.getIssueid();
+                intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
+                intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
+                startActivity(intent);
+            }
+        });
+        mTaskId.setText("# " + issue.getIssueid().toString());
+        mTaskSubject.setText(issue.getSubject());
+        mTaskProject.setText(issue.getProject().getName());
+        String projectName = issue.getProject().getName().substring(0, 1);
+        mProjectFirstLetterTextView.setText(projectName);
+    }
+
+    @Override
+    public void invalidateFreezedTask() {
+        mFreezedIssue.invalidate();
     }
 
     //методы для фрагмента ProjectListFragment
     @Override
     public void onProjectListFragmentInteraction() {
+    }
+
+    @Override
+    public void OnDialogIteration() {
+        mFreezedIssue.setVisibility(View.GONE);
+        TaskListFragment taskListFragment = TaskListFragment.newInstance(authToken);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, taskListFragment, TASK_LIST_FRAGMENT_TAG)
+                .commitNow();
     }
 }
 

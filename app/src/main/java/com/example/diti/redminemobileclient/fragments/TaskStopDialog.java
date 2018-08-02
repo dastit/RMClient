@@ -11,7 +11,6 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AlertDialog;
 
 import com.example.diti.redminemobileclient.R;
-import com.example.diti.redminemobileclient.activities.MainActivity;
 
 public class TaskStopDialog extends DialogFragment {
 
@@ -35,8 +34,26 @@ public class TaskStopDialog extends DialogFragment {
         int hours = (int) Math.floor(Math.floor(seconds / 60) / 60);
         int minutes = (int) (Math.floor(seconds / 60) - hours * 60);
 
-        String message = getString(R.string.stop_task_message)+hours+" часов "+minutes+" минут.";
-        builder.setMessage(message).setIcon(getResources().getDrawable(R.drawable.outline_timer_off_24))
+        String message = getString(R.string.stop_task_message);
+        if(hours!=0){
+            String hoursWord = " часов ";
+            if(hours==1){
+                hoursWord = " час ";
+            }
+            if(hours==2 || hours==3 || hours == 4){
+                hoursWord = " часа ";
+            }
+            message = message+hours+hoursWord;
+        }
+        String minWord = " минут";
+        if(minutes==1){
+            minWord = " минута";
+        }
+        if(minutes==2 || minutes==3 || minutes == 4){
+            minWord = " минуты";
+        }
+        message = message + minutes+minWord;
+        builder.setMessage(message)
                 .setPositiveButton(R.string.stop_task, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
@@ -63,10 +80,7 @@ public class TaskStopDialog extends DialogFragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if(context.getClass().equals(MainActivity.class)){
-           mListener = null;
-        }
-        else if (context instanceof OnDialogIterationListener) {
+        if (context instanceof OnDialogIterationListener) {
             mListener = (OnDialogIterationListener) context;
         } else {
             throw new RuntimeException(context.toString()
