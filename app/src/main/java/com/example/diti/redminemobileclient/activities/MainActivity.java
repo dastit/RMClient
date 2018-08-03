@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     private Toolbar             topToolbar;
     private ActionBar           ab;
     private String              authToken;
-    private Issue mIssue;
     private CardView mFreezedIssue;
 
     private boolean isAuthNeeded = true;
@@ -208,6 +207,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
                                     getSupportFragmentManager().beginTransaction()
                                             .replace(R.id.fragment_container, projectListFragment, PROJECT_LIST_FRAGMENT_TAG)
                                             .commit();
+                                    mFreezedIssue.setVisibility(View.GONE);
 
                                 case R.id.menu_stat://пункт меню "Статистика"
 
@@ -219,7 +219,6 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     }
 
     private void initCentralFragment(String token) {
-        mProgressView.setVisibility(View.GONE);
         if (findViewById(R.id.fragment_container) != null) {
             TaskListFragment taskListFragment = TaskListFragment.newInstance(token);
             getSupportFragmentManager().beginTransaction()
@@ -242,7 +241,6 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     //методы для фрагмента TaskListFragment
     @Override
     public void showFreezedTask(Issue issue) {
-        mIssue = issue;
         mFreezedIssue.setVisibility(View.VISIBLE);
         TextView mTaskSubject = (TextView)findViewById(R.id.f_task_subject);
         TextView  mTaskCreationDate = (TextView)findViewById(R.id.f_task_date);
@@ -282,11 +280,17 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
         mFreezedIssue.invalidate();
     }
 
+    @Override
+    public void setProgressBar() {
+        mProgressView.setVisibility(View.GONE);
+    }
+
     //методы для фрагмента ProjectListFragment
     @Override
     public void onProjectListFragmentInteraction() {
     }
 
+    //методы для TaskStopDialog
     @Override
     public void OnDialogIteration() {
         mFreezedIssue.setVisibility(View.GONE);

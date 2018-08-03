@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -65,12 +66,12 @@ public class TaskListFragment extends Fragment {
     private PagedTaskListRepository           repository;
     private ProgressBar                       mProgressBar;
     private SharedPreferences                 mSharedPreferences;
+    private FloatingActionButton mCreateNewTaskButton;
     private SharedPreferences.Editor          mEditor;
 
     public TaskListFragment() {
     }
 
-    //TODO: прикрепить запущенную задачу к верху страницы
     public static TaskListFragment newInstance(String token) {
         TaskListFragment fragment = new TaskListFragment();
         Bundle args = new Bundle();
@@ -93,9 +94,6 @@ public class TaskListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tasklist_list, container, false);
-        mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_tasklist_progress);
-        mProgressBar.setVisibility(View.VISIBLE);
-
 
         RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "", getActivity()
                 .getCacheDir());
@@ -166,6 +164,13 @@ public class TaskListFragment extends Fragment {
             }
         });
 
+        mCreateNewTaskButton = (FloatingActionButton) view.findViewById(R.id.new_task_fab);
+        mCreateNewTaskButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
 
         return view;
     }
@@ -224,6 +229,8 @@ public class TaskListFragment extends Fragment {
         void showFreezedTask(Issue issue);
 
         void invalidateFreezedTask();
+
+        void setProgressBar();
     }
 
     //класс адаптера
@@ -250,7 +257,9 @@ public class TaskListFragment extends Fragment {
 
         @Override
         public void onViewAttachedToWindow(@NonNull TaskListViewHolder holder) {
-            mProgressBar.setVisibility(View.GONE);
+            if(mListener!=null){
+                mListener.setProgressBar();
+            }
         }
 
         public Issue getItemClicked(int position) {

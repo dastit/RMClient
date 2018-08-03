@@ -5,16 +5,17 @@ import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
+import android.support.design.widget.TextInputLayout;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AutoCompleteTextView;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -37,13 +38,12 @@ public class LoginActivity extends AccountAuthenticatorActivity {
     public static final  String EXTRA_TOKEN_TYPE = "com.example.diti.redminemobileclient.EXTRA_TOKEN_TYPE";
 
     // UI references.
-    private AutoCompleteTextView mEmailView;
+    private EditText mEmailView;
     private EditText             mPasswordView;
     private View                 mProgressView;
     private View                 mLoginFormView;
-
-    DialogFragment mLoginFragment;
-
+    private TextInputLayout mLoginTextInputLayout;
+    private TextInputLayout mPasswordTextInputLayout;
 
     String login;
     String password;
@@ -54,7 +54,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
         setContentView(R.layout.activity_login);
 
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mEmailView = (EditText) findViewById(R.id.login);
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -66,20 +66,29 @@ public class LoginActivity extends AccountAuthenticatorActivity {
             }
         });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        Button mEmailSignInButton = (Button) findViewById(R.id.sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                view = getCurrentFocus();
+                if (view != null) {
+                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).
+                            hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                }
                 attemptLogin();
             }
         });
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-
+        mLoginTextInputLayout = (TextInputLayout)findViewById(R.id.loginWrapper);
+        mPasswordTextInputLayout = (TextInputLayout)findViewById(R.id.passwordWrapper);
+        mLoginTextInputLayout.setHint(getString(R.string.prompt_login));
+        mPasswordTextInputLayout.setHint(getString(R.string.prompt_password));
     }
 
     private void attemptLogin() {
+
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);

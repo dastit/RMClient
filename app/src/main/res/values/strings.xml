@@ -55,5 +55,18 @@
     <string name="stop_task_message">Время выполнения задания: \n</string>
     <string name="stop_task">Остановить</string>
     <string name="dont_stop_task">Отмена</string>
+    <string name="new_task_title">Новая задача</string>
+    <string name="new_task_project_label">Проект:</string>
+    <string name="new_task_subject_label">Название:</string>
+    <string name="new_task_description_label">Описание:</string>
+    <string name="new_task_priority_label">Приоритет</string>
+    <string name="new_task_assigned_to_label">Исполнитель:</string>
+    <string name="new_task_parent_issue_label">Родительская задача (#):</string>
+    <string name="new_task_parent_issue_button">Выбрать</string>
+    <string name="new_task_estimated_time_label">Оценка времени:</string>
+    <string name="new_task_attachments_label">Вложения:</string>
+    <string name="new_task_attachments_button">Выбрать</string>
+    <string name="new_task_supervisors_label">Наблюдатели</string>
+    <string name="welcome">Добро пожаловать!</string>
 
 </resources>

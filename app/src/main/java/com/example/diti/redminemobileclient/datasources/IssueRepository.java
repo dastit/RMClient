@@ -136,5 +136,4 @@ public class IssueRepository {
         }
         return false;
     }
-//TODO: предусмотреть что в аттаче могут быть не только картинки, но и доки и PDF
 }

@@ -27,7 +27,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.SubMenu;
+import android.view.View;
 import android.webkit.MimeTypeMap;
+import android.widget.ProgressBar;
 
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.IssueDatabase;
@@ -63,6 +65,7 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     private IssueViewModel           mIssueViewModel;
     private IssueDatabase            mDatabase;
     private SharedPreferences        sharedPreferences;
+    private ProgressBar mProgressBar;
     private SharedPreferences.Editor editor;
     private Integer                  issueId;
     private Issue                    mIssue;
@@ -76,6 +79,9 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task);
+        mProgressBar = (ProgressBar)findViewById(R.id.task_progress);
+        mProgressBar.setVisibility(View.VISIBLE);
+
         issueId = getIntent().getIntExtra(EXTRA_ISSUE_ID, 0);
         mAuthToken = getIntent().getStringExtra(EXTRA_TOKEN);
         isStopedFromNotificaton = getIntent().getBooleanExtra(IS_TASK_STOPED_FROM_NOTIFICATION, false);
@@ -275,6 +281,7 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     public void onFragmentInteraction(Issue issue) {
         mIssue = issue;
         invalidateOptionsMenu();
+        mProgressBar.setVisibility(View.GONE);
     }
 
     @Override

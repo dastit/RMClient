@@ -9,7 +9,6 @@ import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
 import java.util.concurrent.Executors;
 
-//TODO: add cache
 public class PagedTaskListRepository {
 
     RedmineRestApiClient.RedmineClient client;
