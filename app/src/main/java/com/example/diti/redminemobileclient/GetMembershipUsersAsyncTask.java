@@ -2,6 +2,7 @@ package com.example.diti.redminemobileclient;
 
 import android.support.v4.app.DialogFragment;
 import android.os.AsyncTask;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 
 import com.example.diti.redminemobileclient.fragments.AssignedToListDialog;
@@ -25,13 +26,13 @@ public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, List<Memb
     private TaskDelegate                     mDelegate;
     private String                           projectId;
     private DialogFragment                   mDialog;
-    private List<MembershipUser>             mCheckedUsers;
+    private ArrayMap<Integer, String>   mCheckedUsers;
 
     public interface TaskDelegate {
         public void removeProgressBar();
     }
 
-    public GetMembershipUsersAsyncTask(AppCompatActivity context, String authToken, String id, DialogFragment dialog, List<MembershipUser> checkedUsers) {
+    public GetMembershipUsersAsyncTask(AppCompatActivity context, String authToken, String id, DialogFragment dialog, ArrayMap<Integer, String>  checkedUsers) {
         contextRef = new WeakReference<AppCompatActivity>(context);
         token = authToken;
         mDelegate = (TaskDelegate) contextRef.get();

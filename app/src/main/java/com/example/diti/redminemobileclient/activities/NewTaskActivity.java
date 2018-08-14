@@ -8,6 +8,7 @@ import android.os.PersistableBundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.provider.DocumentFile;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -88,7 +89,7 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
     private String chosenParentIssue;
     private String savedEstimatedTime;
     private List<Uri>            attachmentList = new ArrayList<>();
-    private List<MembershipUser> supervisorIds  = new ArrayList<>();
+    private ArrayMap<Integer, String>  supervisorIds  = new ArrayMap<>();
     private String supervisorsListString;
 
     @Override
@@ -381,6 +382,7 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
 
             @Override
             public void afterTextChanged(Editable s) {
+                verticalStepperForm.setActiveStepAsUncompleted("");
                 checkParentIssueStep();
             }
         });
@@ -519,6 +521,7 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
             case 4:
                 break;
             case 5:
+                checkParentIssueStep();
                 break;
             case 6:
                 break;
@@ -578,6 +581,10 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
     }
 
     private void checkParentIssueStep() {
+        if(mParentIssueEditText.getText().toString().isEmpty()){
+            verticalStepperForm.setActiveStepAsCompleted();
+            return;
+        }
         ParentIssueAsyncTask task = new ParentIssueAsyncTask(this, mAuthToken, chosenProjectID, false);
         task.execute();
     }
@@ -723,16 +730,15 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
 
     //for supervisors list
     @Override
-    public void onItemClick(List<MembershipUser> users) {
+    public void onItemClick(ArrayMap<Integer, String> users) {
         String list = "";
         if (!users.isEmpty()) {
-            for (MembershipUser user : users) {
-                Log.d(TAG, user.getName());
-                list += user.getName() + "\n";
+            for (String user : users.values()) {
+                list += user + "\n";
             }
             mSupervisors.setText(list);
 
-            supervisorsListString = list;
+            supervisorsListString = "\n"+ list;
         }
 
     }

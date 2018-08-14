@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
@@ -20,14 +21,14 @@ import java.util.List;
 public class SupervisorListDialog extends DialogFragment {
     private static final String TAG = "SupervisorListDialog";
     private List<Membership> mMemberships;
-    private List<MembershipUser> chosen = new ArrayList<>();
+    private ArrayMap<Integer, String> chosen    = new ArrayMap<>();
     private SupervisorListDialogListener mListener;
 
     public interface SupervisorListDialogListener {
-        public void onItemClick(List<MembershipUser> users);
+        public void onItemClick(ArrayMap<Integer, String>  users);
     }
 
-    public void show(FragmentManager manager, String tag, List<Membership> memberships, List<MembershipUser> checkedUsers) {
+    public void show(FragmentManager manager, String tag, List<Membership> memberships, ArrayMap<Integer, String> checkedUsers) {
         mMemberships = memberships;
         chosen = checkedUsers;
         super.show(manager, tag);
@@ -53,10 +54,8 @@ public class SupervisorListDialog extends DialogFragment {
         for (Membership membership : mMemberships) {
             names[i] = membership.getUser().getName();
             checkedItems[i] = false;
-            for (MembershipUser user : chosen) {
-                if (user.equals(membership.getUser())) {
-                    checkedItems[i] = true;
-                }
+            if(chosen.containsKey(membership.getUser().getId())){
+                checkedItems[i] = true;
             }
             i++;
         }
@@ -65,14 +64,15 @@ public class SupervisorListDialog extends DialogFragment {
             public void onClick(DialogInterface dialog, int which, boolean isChecked) {
                 MembershipUser user = mMemberships.get(which).getUser();
                 if (isChecked) {
-                    chosen.add(user);
-                } else if (chosen.contains(user)) {
-                    chosen.remove(user);
+                    chosen.put(user.getId(), user.getName());
+                } else if (chosen.containsKey(user.getId())) {
+                    chosen.remove(user.getId());
                 }
             }
         }).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+
                 mListener.onItemClick(chosen);
             }
         }).setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
