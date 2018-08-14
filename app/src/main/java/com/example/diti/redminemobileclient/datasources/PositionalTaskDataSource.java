@@ -51,15 +51,18 @@ public class PositionalTaskDataSource extends PositionalDataSource<Issue> {
 //        });
         try {
             Response response = call.execute();
-            result = (Issues) response.body();
+            if(response.isSuccessful()){
+                result = (Issues) response.body();
+                if (params.placeholdersEnabled) {
+                    callback.onResult(result.getIssues(), result.getOffset(), result.getTotalCount());
+                } else {
+                    callback.onResult(result.getIssues(), result.getOffset());
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (params.placeholdersEnabled) {
-            callback.onResult(result.getIssues(), result.getOffset(), result.getTotalCount());
-        } else {
-            callback.onResult(result.getIssues(), result.getOffset());
-        }
+
     }
 
     @Override

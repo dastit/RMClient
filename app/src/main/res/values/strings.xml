@@ -56,17 +56,43 @@
     <string name="stop_task">Остановить</string>
     <string name="dont_stop_task">Отмена</string>
     <string name="new_task_title">Новая задача</string>
-    <string name="new_task_project_label">Проект:</string>
-    <string name="new_task_subject_label">Название:</string>
-    <string name="new_task_description_label">Описание:</string>
+    <string name="new_task_project_label">Выбрать проект</string>
+    <string name="new_task_subject_label">Введите короткое название задачи</string>
+    <string name="new_task_description_label">Введите полное описание для задачи</string>
     <string name="new_task_priority_label">Приоритет</string>
-    <string name="new_task_assigned_to_label">Исполнитель:</string>
-    <string name="new_task_parent_issue_label">Родительская задача (#):</string>
+    <string name="new_task_assigned_to_label">Выбрать</string>
+    <string name="new_task_parent_issue_label">0000</string>
     <string name="new_task_parent_issue_button">Выбрать</string>
     <string name="new_task_estimated_time_label">Оценка времени:</string>
     <string name="new_task_attachments_label">Вложения:</string>
     <string name="new_task_attachments_button">Выбрать</string>
     <string name="new_task_supervisors_label">Наблюдатели</string>
     <string name="welcome">Добро пожаловать!</string>
+    <string name="new_task_empty_project_error">Выберите проект из списка</string>
+    <string name="new_task_empty_subject_error">Пустое название</string>
+    <string name="new_task_empty_description_error">Пустое описание</string>
+    <string name="new_task_empty_assigned_to_error">Пустой исполнитель</string>
+    <string name="new_task_empty_estimated_time_error">Пустое время</string>
+    <string name="vertical_form_stepper_form_continue">Далее</string>
+    <string name="vertical_form_stepper_form_last_step">Сохранить</string>
+    <string name="vertical_form_stepper_form_confirm_button">Сохранить</string>
 
+
+    <string-array name="issue_priorities">
+        <item>Нормальный</item>
+        <item>Высокий</item>
+        <item>Высочайший</item>
+    </string-array>
+
+    <string-array name="new_task_steps">
+        <item>Проект</item>
+        <item>Название</item>
+        <item>Описание</item>
+        <item>Приоритет</item>
+        <item>Исполнитель</item>
+        <item>Родительская задача</item>
+        <item>Оценка времени (в часах)</item>
+        <item>Вложения</item>
+        <item>Наблюдатели</item>
+    </string-array>
 </resources>

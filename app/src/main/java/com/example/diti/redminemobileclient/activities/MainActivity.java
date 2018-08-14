@@ -219,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     }
 
     private void initCentralFragment(String token) {
+
         if (findViewById(R.id.fragment_container) != null) {
             TaskListFragment taskListFragment = TaskListFragment.newInstance(token);
             getSupportFragmentManager().beginTransaction()

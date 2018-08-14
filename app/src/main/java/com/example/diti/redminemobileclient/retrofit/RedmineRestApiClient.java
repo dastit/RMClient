@@ -2,6 +2,8 @@ package com.example.diti.redminemobileclient.retrofit;
 
 import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.model.Issues;
+import com.example.diti.redminemobileclient.model.Membership;
+import com.example.diti.redminemobileclient.model.Memberships;
 import com.example.diti.redminemobileclient.model.Projects;
 import com.example.diti.redminemobileclient.model.Users;
 
@@ -32,6 +34,9 @@ public class RedmineRestApiClient {
         @GET("/issues.json?assigned_to_id=me")
         Call<Issues> reposForTasks(@Query("offset") int offset, @Query("limit") int limit, @Query("sort") String sortByColumn);
 
+        @GET("/issues.json")
+        Call<Issues> reposForTasksInProject(@Query("project_id") String projectId);
+
         @GET("/projects.json")
         Call<Projects> reposForProjects(@Query("offset") int offset, @Query("limit") int limit, @Query("sort") String sortByColumn);
 
@@ -40,5 +45,8 @@ public class RedmineRestApiClient {
 
         @GET
         Call<ResponseBody> getAttachment (@Url String url);
+
+        @GET("projects/{projectId}/memberships.json")
+        Call<Memberships> reposForMembership(@Path("projectId") String id);
     }
 }

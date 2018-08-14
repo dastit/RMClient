@@ -38,6 +38,7 @@ import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.SwipeController;
 import com.example.diti.redminemobileclient.SwipeControllerActions;
+import com.example.diti.redminemobileclient.activities.NewTaskActivity;
 import com.example.diti.redminemobileclient.activities.TaskActivity;
 import com.example.diti.redminemobileclient.datasources.PagedTaskListRepository;
 import com.example.diti.redminemobileclient.datasources.PagedTasksListViewModel;
@@ -168,7 +169,9 @@ public class TaskListFragment extends Fragment {
         mCreateNewTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                Intent intent = new Intent(getActivity(), NewTaskActivity.class);
+                intent.putExtra(NewTaskActivity.EXTRA_AUTH, mAuthToken);
+                startActivity(intent);
             }
         });
 
