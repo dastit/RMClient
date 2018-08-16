@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.os.PersistableBundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
@@ -44,6 +45,7 @@ import com.example.diti.redminemobileclient.model.Membership;
 import com.example.diti.redminemobileclient.model.MembershipUser;
 import com.example.diti.redminemobileclient.model.Project;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,9 +53,14 @@ import ernestoyaquello.com.verticalstepperform.VerticalStepperFormLayout;
 import ernestoyaquello.com.verticalstepperform.interfaces.VerticalStepperForm;
 
 public class NewTaskActivity extends AppCompatActivity implements VerticalStepperForm, ProjectListDialog.ProjectListDialogListener, ProjectListAsyncTask.TaskDelegate, GetMembershipUsersAsyncTask.TaskDelegate, AssignedToListDialog.AssignedToListDialogListener, ParentIssueAsyncTask.TaskDelegate, ParentIssuesDialog.ParenIssuesDialogListener, SupervisorListDialog.SupervisorListDialogListener {
-    public final static  String EXTRA_AUTH        = "auth_token";
-    private static final int    REQUEST_IMAGE_GET = 1;
-    private static final String TAG               = "NewTaskActivity";
+    public final static  String EXTRA_AUTH            = "auth_token";
+    private static final int    REQUEST_IMAGE_GET     = 1;
+    private static final String TAG                   = "NewTaskActivity";
+    private static final String STATE_PROJECT_ID      = "projectId";
+    private static final String STATE_ASSIGNED_TO_ID  = "assignedToId";
+    private static final String STATE_PARENT_ISSUE_ID = "parentIssueId";
+    private static final String STATE_ATTACHMENTS     = "attachments";
+    private static final String STATE_SUPERVISORS        = "supervisors";
 
     private MyVerticalStepperFormLayout verticalStepperForm;
     private Button                      mProjectButton;
@@ -88,7 +95,7 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
     private String chosenParentIssueId;
     private String chosenParentIssue;
     private String savedEstimatedTime;
-    private List<Uri>            attachmentList = new ArrayList<>();
+    private ArrayList<Uri>            attachmentList = new ArrayList<>();
     private ArrayMap<Integer, String>  supervisorIds  = new ArrayMap<>();
     private String supervisorsListString;
 
@@ -255,6 +262,9 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
         mDescription.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(!event.equals(EditorInfo.IME_NULL)){
+                    return false;
+                }
                 verticalStepperForm.goToNextStep();
                 return false;
             }
@@ -665,7 +675,19 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        //outState.putString();
+        outState.putString(STATE_PROJECT_ID, chosenProjectID);
+        //outState.putString(STATE_PROJECT_NAME, chosenProjectName);
+        //outState.putString(STATE_SUBJECT, savedSubject);
+        //outState.putString(STATE_DESCRIPTION, savedDescription);
+        outState.putString(STATE_ASSIGNED_TO_ID, chosenAssignedToID);
+        //outState.putString(STATE_ASSIGNED_TO, chosenAssignedTo);
+        //outState.putString(STATE_PRIORITY, chosenPriority);
+        //outState.putString(STATE_ESTIMATED_TIME, savedEstimatedTime);
+        outState.putString(STATE_PARENT_ISSUE_ID, chosenParentIssueId);
+        //outState.putString(STATE_PARENT_ISSUE, chosenParentIssue);
+        outState.putParcelableArrayList(STATE_ATTACHMENTS, attachmentList);
+        ArrayList<Integer> supervisorIdList = new ArrayList<>(supervisorIds.keySet());
+        outState.putIntegerArrayList(STATE_SUPERVISORS, supervisorIdList);
     }
 
     @Override

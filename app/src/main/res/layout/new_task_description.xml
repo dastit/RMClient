@@ -9,8 +9,8 @@
         android:layout_height="wrap_content"
         android:inputType="textMultiLine"
         android:isScrollContainer="true"
-        android:lines="8"
         android:scrollbarAlwaysDrawVerticalTrack="true"
         android:singleLine="false"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:imeOptions="actionUnspecified"/>
 </ScrollView>
