@@ -134,22 +134,21 @@ public class TaskCommentsFragment extends Fragment {
             public void bindItem (IssueJournal journal, Issue issue){
                 mNote.setText(journal.getNotes());
                 mAuthor.setText(journal.getUser().getName());
-                mExpandButton.setOnClickListener(new View.OnClickListener() {
+                mView.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View v) {
-                        mNote.setMaxLines(1000);
-                        mCollapseButton.setVisibility(View.VISIBLE);
-                        mExpandButton.setVisibility(View.GONE);
+                    public void onClick(View view) {
+                        if(mCollapseButton.getVisibility()==View.GONE){
+                            mNote.setMaxLines(1000);
+                            mCollapseButton.setVisibility(View.VISIBLE);
+                            mExpandButton.setVisibility(View.GONE);
+                        }else if(mCollapseButton.getVisibility() == View.VISIBLE){
+                            mNote.setMaxLines(3);
+                            mCollapseButton.setVisibility(View.GONE);
+                            mExpandButton.setVisibility(View.VISIBLE);
+                        }
                     }
                 });
-                mCollapseButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mNote.setMaxLines(3);
-                        mCollapseButton.setVisibility(View.GONE);
-                        mExpandButton.setVisibility(View.VISIBLE);
-                    }
-                });
+
                 mDate.setText(DateConverter.getDate(journal.getCreatedOn()));
 
                 if (issue.getAttachments().size() != 0) {
