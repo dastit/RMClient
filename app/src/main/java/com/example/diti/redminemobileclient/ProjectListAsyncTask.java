@@ -1,7 +1,9 @@
 package com.example.diti.redminemobileclient;
 
+import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
 import com.example.diti.redminemobileclient.fragments.ProjectListDialog;
 import com.example.diti.redminemobileclient.model.Project;
@@ -41,14 +43,15 @@ public class ProjectListAsyncTask extends AsyncTask<Void, Void, List<Project>> {
             int offset = 25;
             int limit = 25;
             int totalCount = response.body().getTotalCount();
-            //TODO: commented while debug
+            //TODO: DO NOT DELETE COMMENTED - commented for debug
 //            while (offset+limit <= totalCount){
 //                call = client.reposForProjects(offset, limit, "name");
 //                response =  call.execute();
 //                projectList.addAll(response.body().getProjects());
 //                offset =response.body().getOffset()+limit;
 //            }
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
+            Toast.makeText(contextRef.get(), R.string.connection_mistake, Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
         return projectList;

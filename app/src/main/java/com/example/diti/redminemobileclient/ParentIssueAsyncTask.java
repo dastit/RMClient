@@ -1,9 +1,10 @@
 package com.example.diti.redminemobileclient;
 
+import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
-import com.example.diti.redminemobileclient.fragments.ParentIssuesDialog;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.model.Issues;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
@@ -16,24 +17,21 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class ParentIssueAsyncTask extends AsyncTask <Void, Void, List<Issue>> {
-    private WeakReference<AppCompatActivity>     contextRef;
-    private String                               token;
+public class ParentIssueAsyncTask extends AsyncTask<Void, Void, List<Issue>> {
+    private WeakReference<AppCompatActivity> contextRef;
+    private String token;
     private TaskDelegate mDelegate;
-    private String                               projectId;
-    private boolean flag;
+    private String projectId;
 
     public interface TaskDelegate {
-        public void removeProgressBar();
-        public void checkInsertedIssueId(List<Issue> issues);
+        void createAdaptedForParentIssues(List<Issue> issues);
     }
 
-    public ParentIssueAsyncTask(AppCompatActivity context, String authToken, String id, boolean openDialogFlag) {
+    public ParentIssueAsyncTask(AppCompatActivity context, String authToken, String id) {
         contextRef = new WeakReference<AppCompatActivity>(context);
         token = authToken;
         mDelegate = (TaskDelegate) contextRef.get();
         projectId = id;
-        flag = openDialogFlag;
     }
 
     protected List<Issue> doInBackground(Void... voids) {
@@ -41,12 +39,24 @@ public class ParentIssueAsyncTask extends AsyncTask <Void, Void, List<Issue>> {
         RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token, null, contextRef
                 .get()
                 .getCacheDir());
-        Call<Issues> call = client.reposForTasksInProject(projectId);
+        Call<Issues> call = client.reposForTasksInProject(projectId, 0, 25, "name");
         try {
             Response<Issues> response = call.execute();
             issues = response.body().getIssues();
 
-        } catch (IOException e) {
+            //TODO:DO NOT DELETE COMMENTED - commented for debug
+//            int offset = 25;
+//            int limit = 25;
+//            int totalCount = response.body().getTotalCount();
+//            while(offset+limit < totalCount){
+//                call = client.reposForTasksInProject(projectId, offset, limit, "name");
+//                response = call.execute();
+//                issues.addAll(response.body().getIssues());
+//                offset = offset+limit;
+//            }
+
+        } catch (IOException | NullPointerException e) {
+            Toast.makeText(contextRef.get(), contextRef.get().getString(R.string.connection_mistake), Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
         return issues;
@@ -54,14 +64,7 @@ public class ParentIssueAsyncTask extends AsyncTask <Void, Void, List<Issue>> {
 
     @Override
     protected void onPostExecute(List<Issue> issues) {
-        if(flag == true){
-            ParentIssuesDialog dialog = new ParentIssuesDialog();
-            dialog.show(contextRef.get().getSupportFragmentManager(), "ParentIssuesDialog", issues);
-            mDelegate.removeProgressBar();
-        }
-       else{
-            mDelegate.checkInsertedIssueId(issues);
-        }
+        mDelegate.createAdaptedForParentIssues(issues);
     }
 }
 

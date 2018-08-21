@@ -35,7 +35,7 @@ public class RedmineRestApiClient {
         Call<Issues> reposForTasks(@Query("offset") int offset, @Query("limit") int limit, @Query("sort") String sortByColumn);
 
         @GET("/issues.json")
-        Call<Issues> reposForTasksInProject(@Query("project_id") String projectId);
+        Call<Issues> reposForTasksInProject(@Query("project_id") String projectId, @Query("offset") int offset, @Query("limit") int limit, @Query("sort") String sortByColumn);
 
         @GET("/projects.json")
         Call<Projects> reposForProjects(@Query("offset") int offset, @Query("limit") int limit, @Query("sort") String sortByColumn);

@@ -76,6 +76,8 @@
     <string name="vertical_form_stepper_form_continue">Далее</string>
     <string name="vertical_form_stepper_form_last_step">Сохранить</string>
     <string name="vertical_form_stepper_form_confirm_button">Сохранить</string>
+    <string name="connection_mistake">Ошибка подключения. Перезайдите в приложение.</string>
+    <string name="new_task_parent_issue_is_wrong">Выберите значение из списка</string>
 
 
     <string-array name="issue_priorities">

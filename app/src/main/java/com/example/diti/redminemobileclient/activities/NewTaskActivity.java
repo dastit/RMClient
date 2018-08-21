@@ -3,9 +3,8 @@ package com.example.diti.redminemobileclient.activities;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
-import android.os.PersistableBundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.provider.DocumentFile;
@@ -15,6 +14,7 @@ import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.text.style.StyleSpan;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -22,14 +22,15 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.diti.redminemobileclient.GetMembershipUsersAsyncTask;
 import com.example.diti.redminemobileclient.MyVerticalStepperFormLayout;
@@ -37,51 +38,46 @@ import com.example.diti.redminemobileclient.ParentIssueAsyncTask;
 import com.example.diti.redminemobileclient.ProjectListAsyncTask;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.fragments.AssignedToListDialog;
-import com.example.diti.redminemobileclient.fragments.ParentIssuesDialog;
 import com.example.diti.redminemobileclient.fragments.ProjectListDialog;
 import com.example.diti.redminemobileclient.fragments.SupervisorListDialog;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.model.Membership;
-import com.example.diti.redminemobileclient.model.MembershipUser;
 import com.example.diti.redminemobileclient.model.Project;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import ernestoyaquello.com.verticalstepperform.VerticalStepperFormLayout;
 import ernestoyaquello.com.verticalstepperform.interfaces.VerticalStepperForm;
 
-public class NewTaskActivity extends AppCompatActivity implements VerticalStepperForm, ProjectListDialog.ProjectListDialogListener, ProjectListAsyncTask.TaskDelegate, GetMembershipUsersAsyncTask.TaskDelegate, AssignedToListDialog.AssignedToListDialogListener, ParentIssueAsyncTask.TaskDelegate, ParentIssuesDialog.ParenIssuesDialogListener, SupervisorListDialog.SupervisorListDialogListener {
-    public final static  String EXTRA_AUTH            = "auth_token";
-    private static final int    REQUEST_IMAGE_GET     = 1;
-    private static final String TAG                   = "NewTaskActivity";
-    private static final String STATE_PROJECT_ID      = "projectId";
-    private static final String STATE_ASSIGNED_TO_ID  = "assignedToId";
+public class NewTaskActivity extends AppCompatActivity implements VerticalStepperForm, ProjectListDialog.ProjectListDialogListener, ProjectListAsyncTask.TaskDelegate, GetMembershipUsersAsyncTask.TaskDelegate, AssignedToListDialog.AssignedToListDialogListener, ParentIssueAsyncTask.TaskDelegate, SupervisorListDialog.SupervisorListDialogListener {
+    public final static String EXTRA_AUTH = "auth_token";
+    private static final int REQUEST_IMAGE_GET = 1;
+    private static final String TAG = "NewTaskActivity";
+    private static final String STATE_PROJECT_ID = "projectId";
+    private static final String STATE_ASSIGNED_TO_ID = "assignedToId";
     private static final String STATE_PARENT_ISSUE_ID = "parentIssueId";
-    private static final String STATE_ATTACHMENTS     = "attachments";
-    private static final String STATE_SUPERVISORS        = "supervisors";
+    private static final String STATE_ATTACHMENTS = "attachments";
+    private static final String STATE_SUPERVISORS = "supervisors";
 
     private MyVerticalStepperFormLayout verticalStepperForm;
-    private Button                      mProjectButton;
-    private TextView                    mChosenProject;
-    private TextView                    mChosenProjectId;
+    private Button mProjectButton;
+    private TextView mChosenProject;
+    private TextView mChosenProjectId;
 
-    private EditText    mSubject;
-    private EditText    mDescription;
-    private Spinner     mPriority;
-    private Button      mAssignedToButton;
-    private TextView    mAssignedTo;
-    private TextView    mAssignedToId;
-    private EditText    mParentIssueEditText;
-    private Button      mParentIssueButton;
-    private EditText    mEstimatedTime;
-    private Button      mAttachmentsButton;
-    private TextView    mAttachmentsList;
-    private Button      mSupervisorsButton;
-    private TextView    mSupervisors;
+    private EditText mSubject;
+    private EditText mDescription;
+    private Spinner mPriority;
+    private Button mAssignedToButton;
+    private TextView mAssignedTo;
+    private TextView mAssignedToId;
+    private AutoCompleteTextView mParentIssue;
+    private EditText mEstimatedTime;
+    private Button mAttachmentsButton;
+    private TextView mAttachmentsList;
+    private Button mSupervisorsButton;
+    private TextView mSupervisors;
     private ProgressBar mProgressBar;
-    private TextView    mConfirmationContent;
+    private TextView mConfirmationContent;
 
     private String mAuthToken;
 
@@ -95,8 +91,8 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
     private String chosenParentIssueId;
     private String chosenParentIssue;
     private String savedEstimatedTime;
-    private ArrayList<Uri>            attachmentList = new ArrayList<>();
-    private ArrayMap<Integer, String>  supervisorIds  = new ArrayMap<>();
+    private ArrayList<Uri> attachmentList = new ArrayList<>();
+    private ArrayMap<Integer, String> supervisorIds = new ArrayMap<>();
     private String supervisorsListString;
 
     @Override
@@ -197,6 +193,7 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
         mChosenProject.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
                 verticalStepperForm.goToNextStep();
                 return false;
             }
@@ -262,7 +259,7 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
         mDescription.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(!event.equals(EditorInfo.IME_NULL)){
+                if (!event.equals(EditorInfo.IME_NULL)) {
                     return false;
                 }
                 verticalStepperForm.goToNextStep();
@@ -368,35 +365,62 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
         LayoutInflater inflater = LayoutInflater.from(this);
         LinearLayout parentIssue =
                 (LinearLayout) inflater.inflate(R.layout.new_task_parent_issue, null, false);
-        mParentIssueEditText = (EditText) parentIssue.findViewById(R.id.new_task_parent_issue);
-        mParentIssueEditText.setHint(getString(R.string.new_task_parent_issue_label));
-        mParentIssueButton = (Button) parentIssue.findViewById(R.id.new_task_parent_issue_button);
-        mParentIssueButton.setText(getString(R.string.new_task_parent_issue_button));
-        mParentIssueButton.setOnClickListener(new View.OnClickListener() {
+        mParentIssue = (AutoCompleteTextView) parentIssue.findViewById(R.id.new_task_parent_issue);
+        mParentIssue.setHint(getString(R.string.new_task_parent_issue_label));
+        mParentIssue.setThreshold(3);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        mParentIssue.setDropDownWidth(displayMetrics.widthPixels);
+
+        mParentIssue.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v) {
-                ParentIssueAsyncTask task = new ParentIssueAsyncTask(NewTaskActivity.this, mAuthToken, chosenProjectID, true);
-                task.execute();
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                verticalStepperForm.setActiveStepAsCompleted();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
             }
         });
-        mParentIssueEditText.addTextChangedListener(new TextWatcher() {
+
+        mParentIssue.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-                verticalStepperForm.setActiveStepAsUncompleted("");
+            public void afterTextChanged(Editable editable) {
                 checkParentIssueStep();
             }
         });
-        mParentIssueEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            mParentIssue.setOnDismissListener(new AutoCompleteTextView.OnDismissListener() {
+                @Override
+                public void onDismiss() {
+                    String insertedValue = mParentIssue.getText().toString();
+                    if (!insertedValue.isEmpty()) {
+                        ListAdapter adapter = mParentIssue.getAdapter();
+                        for (int i = 0; i < adapter.getCount(); i++) {
+                            if (adapter.getItem(i).equals(insertedValue)) {
+                                chosenParentIssue = insertedValue;
+                                chosenParentIssueId = insertedValue.substring(0, 4);
+                                return;
+
+                            }
+                        }
+                        verticalStepperForm.setActiveStepAsUncompleted(getString(R.string.new_task_parent_issue_is_wrong));
+                    }
+                }
+            });
+        }
+        mParentIssue.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 verticalStepperForm.goToNextStep();
@@ -550,6 +574,8 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
 
     private void checkProjectStep() {
         if (mChosenProject.getText().length() > 0) {
+            ParentIssueAsyncTask task = new ParentIssueAsyncTask(NewTaskActivity.this, mAuthToken, chosenProjectID);
+            task.execute();
             verticalStepperForm.setActiveStepAsCompleted();
             verticalStepperForm.goToNextStep();
         } else {
@@ -591,12 +617,13 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
     }
 
     private void checkParentIssueStep() {
-        if(mParentIssueEditText.getText().toString().isEmpty()){
+        String content = mParentIssue.getText().toString();
+        if (content.isEmpty() || content.length()>4) {
             verticalStepperForm.setActiveStepAsCompleted();
             return;
+        }else{
+            verticalStepperForm.setActiveStepAsUncompleted(getString(R.string.new_task_parent_issue_is_wrong));
         }
-        ParentIssueAsyncTask task = new ParentIssueAsyncTask(this, mAuthToken, chosenProjectID, false);
-        task.execute();
     }
 
     private void checkEstimatedTimeStep() {
@@ -697,29 +724,15 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
 
     //for typed parent issue
     @Override
-    public void checkInsertedIssueId(List<Issue> issues) {
-        if (mParentIssueEditText.getText() != null && !mParentIssueEditText.getText()
-                .toString()
-                .startsWith("#")) {//если не была нажата кнопка
-            for (Issue issue : issues) {
-                if (issue.getIssueid()
-                        .toString()
-                        .equals(mParentIssueEditText.getText().toString())) {
-                    String text =
-                            "#" + String.valueOf(issue.getIssueid()) + ": " + issue.getSubject();
-                    mParentIssueEditText.setText(
-                            text);
-                    chosenParentIssueId = issue.getIssueid().toString();
-                    chosenParentIssue = text;
-                    verticalStepperForm.setActiveStepAsCompleted();
-                    verticalStepperForm.goToNextStep();
-                    break;
-                }
-                verticalStepperForm.setActiveStepAsUncompleted("Задачи с таким номером не найдено");
-            }
-        } else {
-            verticalStepperForm.setActiveStepAsCompleted();
+    public void createAdaptedForParentIssues(List<Issue> issues) {
+        String[] issueNames = new String[issues.size()];
+        for (int i = 0; i < issueNames.length; i++) {
+            issueNames[i] = String.valueOf(issues.get(i).getIssueid()) + ": " + issues.get(i).getSubject();
         }
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, issueNames);
+        mParentIssue.setAdapter(adapter);
+        Log.d(TAG, String.valueOf(adapter.getCount()));
     }
 
     //for project
@@ -739,16 +752,6 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
         chosenAssignedTo = membership.getUser().getName();
     }
 
-    //for chosen parent issue
-    @Override
-    public void onItemClick(Issue issue) {
-        String text = "#" + String.valueOf(issue.getIssueid()) + ": " + issue.getSubject();
-        mParentIssueEditText.setText(
-                text, TextView.BufferType.EDITABLE);
-        chosenParentIssueId = String.valueOf(issue.getIssueid());
-        chosenParentIssue = text;
-        verticalStepperForm.setActiveStepAsCompleted();
-    }
 
     //for supervisors list
     @Override
@@ -760,7 +763,7 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
             }
             mSupervisors.setText(list);
 
-            supervisorsListString = "\n"+ list;
+            supervisorsListString = "\n" + list;
         }
 
     }
