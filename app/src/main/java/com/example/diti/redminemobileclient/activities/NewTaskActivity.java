@@ -193,7 +193,6 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
         mChosenProject.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-
                 verticalStepperForm.goToNextStep();
                 return false;
             }
@@ -204,7 +203,12 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
     }
 
     private View createSubjectStep() {
-        mSubject = new EditText(this);
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        ScrollView subjectContainer = (ScrollView) inflater.inflate(R.layout.new_task_description, null, false);
+        mSubject = (EditText) subjectContainer.findViewById(R.id.new_task_description);
+
+       // mSubject = new EditText(this);
         mSubject.setHint(getString(R.string.new_task_subject_label));
         mSubject.setSingleLine();
         mSubject.addTextChangedListener(new TextWatcher() {
@@ -232,14 +236,14 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
                 return false;
             }
         });
-        return mSubject;
+        return subjectContainer;
     }
 
     private View createDescriptionStep() {
         LayoutInflater inflater = LayoutInflater.from(this);
-        ScrollView descriptionContaner = (ScrollView) inflater.inflate(R.layout.new_task_description, null, false);
-        mDescription = (EditText) descriptionContaner.findViewById(R.id.new_task_description);
-
+        ScrollView descriptionContainer = (ScrollView) inflater.inflate(R.layout.new_task_description, null, false);
+        mDescription = (EditText) descriptionContainer.findViewById(R.id.new_task_description);
+        mDescription.setHint(getString(R.string.new_task_description_label));
         mDescription.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -266,7 +270,7 @@ public class NewTaskActivity extends AppCompatActivity implements VerticalSteppe
                 return false;
             }
         });
-        return descriptionContaner;
+        return descriptionContainer;
     }
 
     private View createPriorityStep() {
