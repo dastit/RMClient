@@ -5,5 +5,6 @@
     <AutoCompleteTextView
         android:id="@+id/new_task_parent_issue"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:imeOptions="actionDone"/>
 </LinearLayout>
