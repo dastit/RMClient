@@ -22,35 +22,33 @@ import retrofit2.Response;
 
 public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, List<Membership>> {
     private WeakReference<AppCompatActivity> contextRef;
-    private String                           token;
-    private TaskDelegate                     mDelegate;
-    private String                           projectId;
-    private DialogFragment                   mDialog;
-    private ArrayMap<Integer, String>   mCheckedUsers;
+    private String token;
+    private TaskDelegate mDelegate;
+    private String projectId;
 
     public interface TaskDelegate {
-        public void removeProgressBar();
+        void saveMembersList(List<Membership> memberships);
     }
 
-    public GetMembershipUsersAsyncTask(AppCompatActivity context, String authToken, String id, DialogFragment dialog, ArrayMap<Integer, String>  checkedUsers) {
+    public GetMembershipUsersAsyncTask(AppCompatActivity context, String authToken,
+                                       String projectId) {
         contextRef = new WeakReference<AppCompatActivity>(context);
         token = authToken;
         mDelegate = (TaskDelegate) contextRef.get();
-        projectId = id;
-        mDialog = dialog;
-        mCheckedUsers = checkedUsers;
+        this.projectId = projectId;
     }
 
     protected List<Membership> doInBackground(Void... voids) {
         List<Membership> userMembershipList = new ArrayList<>();
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token, null, contextRef
-                .get()
-                .getCacheDir());
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token,
+                                                                                          null,
+                                                                                          contextRef
+                                                                                                  .get()
+                                                                                                  .getCacheDir());
         Call<Memberships> call = client.reposForMembership(projectId);
         try {
             Response<Memberships> response = call.execute();
             userMembershipList = response.body().getMemberships();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -59,17 +57,6 @@ public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, List<Memb
 
     @Override
     protected void onPostExecute(List<Membership> memberships) {
-        //AssignedToListDialog dialog = new AssignedToListDialog();
-        if (mDialog instanceof AssignedToListDialog) {
-            AssignedToListDialog mD = (AssignedToListDialog) mDialog;
-            mD.show(contextRef.get()
-                            .getSupportFragmentManager(), "AssignedToListDialog", memberships);
-        }
-        if (mDialog instanceof SupervisorListDialog) {
-            SupervisorListDialog mD = (SupervisorListDialog) mDialog;
-            mD.show(contextRef.get()
-                            .getSupportFragmentManager(), "SupervisorListDialog", memberships, mCheckedUsers);
-        }
-        mDelegate.removeProgressBar();
+        mDelegate.saveMembersList(memberships);
     }
 }

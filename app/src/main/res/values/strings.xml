@@ -60,7 +60,7 @@
     <string name="new_task_subject_label">Введите короткое название задачи</string>
     <string name="new_task_description_label">Введите полное описание для задачи</string>
     <string name="new_task_priority_label">Приоритет</string>
-    <string name="new_task_assigned_to_label">Выбрать</string>
+    <string name="new_task_assigned_to_label">Выберите исполнителя из списка</string>
     <string name="new_task_parent_issue_label">0000</string>
     <string name="new_task_parent_issue_button">Выбрать</string>
     <string name="new_task_estimated_time_label">Оценка времени:</string>
