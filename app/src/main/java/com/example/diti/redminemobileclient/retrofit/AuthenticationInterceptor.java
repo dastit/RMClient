@@ -9,18 +9,23 @@ import okhttp3.Response;
 
 public class AuthenticationInterceptor implements Interceptor {
 
-    private String authToken;
+    private String  authToken;
+    private boolean basicFlag;
 
-    public AuthenticationInterceptor(String token) {
+    public AuthenticationInterceptor(String token, boolean isBasic) {
         this.authToken = token;
+        basicFlag = isBasic;
     }
 
     @Override
     public Response intercept(Chain chain) throws IOException {
-        Request original = chain.request();
-
-        Request.Builder builder = original.newBuilder()
-                .header("Authorization", authToken);
+        Request         original = chain.request();
+        Request.Builder builder;
+        if (basicFlag) {
+            builder = original.newBuilder().header("Authorization", authToken);
+        } else {
+            builder = original.newBuilder().header("X-Redmine-API-Key", authToken);
+        }
 
         Request request = builder.build();
         return chain.proceed(request);

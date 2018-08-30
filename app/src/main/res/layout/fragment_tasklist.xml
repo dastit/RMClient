@@ -73,7 +73,7 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAlignment="gravity"
-                    android:textSize="8sp"
+                    android:textSize="12sp"
                     tool:text="1.1.2018 13:24" />
 
                 <TextView
@@ -94,7 +94,7 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAlignment="textEnd"
-                    android:textSize="8sp"
+                    android:textSize="12sp"
                     tool:text="DPD: Электронный архив" />
 
             </LinearLayout>

@@ -2,13 +2,16 @@ package com.example.diti.redminemobileclient.model;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 @Entity
-public class Project {
+public class Project implements Parcelable{
     @ColumnInfo(name = "description")
     @SerializedName("description")
     @Expose
@@ -99,5 +102,58 @@ public class Project {
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
     }
+
+    @Ignore
+    protected Project(Parcel in) {
+        description = in.readString();
+        name = in.readString();
+        id = in.readByte() == 0x00 ? null : in.readInt();
+        updatedOn = in.readString();
+        createdOn = in.readString();
+        status = in.readByte() == 0x00 ? null : in.readInt();
+        identifier = in.readString();
+    }
+
+    @Override
+    @Ignore
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    @Ignore
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(description);
+        dest.writeString(name);
+        if (id == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeInt(id);
+        }
+        dest.writeString(updatedOn);
+        dest.writeString(createdOn);
+        if (status == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeInt(status);
+        }
+        dest.writeString(identifier);
+    }
+
+    @SuppressWarnings("unused")
+    @Ignore
+    public static final Parcelable.Creator<Project> CREATOR = new Parcelable.Creator<Project>() {
+        @Override
+        public Project createFromParcel(Parcel in) {
+            return new Project(in);
+        }
+
+        @Override
+        public Project[] newArray(int size) {
+            return new Project[size];
+        }
+    };
 
 }

@@ -3,20 +3,20 @@ package com.example.diti.redminemobileclient.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.inputmethodservice.InputMethodService;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.provider.DocumentFile;
 import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.text.style.StyleSpan;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,7 +39,6 @@ import com.example.diti.redminemobileclient.MyVerticalStepperFormLayout;
 import com.example.diti.redminemobileclient.ParentIssueAsyncTask;
 import com.example.diti.redminemobileclient.ProjectListAsyncTask;
 import com.example.diti.redminemobileclient.R;
-import com.example.diti.redminemobileclient.fragments.AssignedToListDialog;
 import com.example.diti.redminemobileclient.fragments.ProjectListDialog;
 import com.example.diti.redminemobileclient.fragments.SupervisorListDialog;
 import com.example.diti.redminemobileclient.model.Issue;
@@ -56,51 +55,54 @@ public class NewTaskActivity extends AppCompatActivity
                    ProjectListAsyncTask.TaskDelegate, GetMembershipUsersAsyncTask.TaskDelegate,
                    ParentIssueAsyncTask.TaskDelegate,
                    SupervisorListDialog.SupervisorListDialogListener {
-    public final static String EXTRA_AUTH = "auth_token";
-    private static final int REQUEST_IMAGE_GET = 1;
-    private static final String TAG = "NewTaskActivity";
-    private static final String STATE_PROJECT_ID = "projectId";
-    private static final String STATE_ASSIGNED_TO_ID = "assignedToId";
+    public final static  String EXTRA_AUTH            = "auth_token";
+    private static final int    REQUEST_IMAGE_GET     = 1;
+    private static final String TAG                   = "NewTaskActivity";
+    private static final String STATE_PROJECT_ID      = "projectId";
+    private static final String STATE_ASSIGNED_TO_ID  = "assignedToId";
     private static final String STATE_PARENT_ISSUE_ID = "parentIssueId";
-    private static final String STATE_ATTACHMENTS = "attachments";
-    private static final String STATE_SUPERVISORS = "supervisors";
+    private static final String STATE_ATTACHMENTS     = "attachments";
+    private static final String STATE_SUPERVISORS     = "supervisors";
+    private static final String STATE_PROJECT_NAME    = "projectName";
+    private static final String STATE_ASSIGNED_TO     = "assignedTo";
+    private static final String STATE_PRIORITY        = "priority";
+    private static final String STATE_ESTIMATED_TIME  = "estimatedTime";
+    private static final String STATE_PROJECT_MEMBERS = "projectMemberships";
+    private static final String STATE_SUPERVISORS_NAMES  = "supervisorNames";
 
     private MyVerticalStepperFormLayout verticalStepperForm;
-    private Button mProjectButton;
-    private TextView mChosenProject;
-    private TextView mChosenProjectId;
+    private Button                      mProjectButton;
+    private TextView                    mChosenProject;
 
-    private EditText mSubject;
-    private EditText mDescription;
-    private Spinner mPriority;
-    private Button mAssignedToButton;
+    private EditText             mSubject;
+    private EditText             mDescription;
+    private Spinner              mPriority;
     private AutoCompleteTextView mAssignedTo;
-    private TextView mAssignedToId;
     private AutoCompleteTextView mParentIssue;
-    private EditText mEstimatedTime;
-    private Button mAttachmentsButton;
-    private TextView mAttachmentsList;
-    private Button mSupervisorsButton;
-    private TextView mSupervisors;
-    private ProgressBar mProgressBar;
-    private TextView mConfirmationContent;
+    private EditText             mEstimatedTime;
+    private Button               mAttachmentsButton;
+    private TextView             mAttachmentsList;
+    private Button               mSupervisorsButton;
+    private TextView             mSupervisors;
+    private ProgressBar          mProgressBar;
+    private TextView             mConfirmationContent;
 
     private String mAuthToken;
 
-    private String chosenProjectID;
-    private String chosenProjectName;
-    private Integer chosenAssignedToID;
-    private List<Membership> mProjectMemberships;
-    private String chosenAssignedTo;
-    private String savedSubject;
-    private String savedDescription;
-    private String chosenPriority;
-    private String chosenParentIssueId;
-    private String chosenParentIssue;
-    private String savedEstimatedTime;
-    private ArrayList<Uri> attachmentList = new ArrayList<>();
-    private ArrayMap<Integer, String> supervisorIds = new ArrayMap<>();
-    private String supervisorsListString;
+    private String                chosenProjectID;
+    private String                chosenProjectName;
+    private Integer               chosenAssignedToID;
+    private ArrayList<Membership> mProjectMemberships;
+    private String                chosenAssignedTo;
+    private String                savedSubject;
+    private String                savedDescription;
+    private String                chosenPriority;
+    private String                chosenParentIssueId;
+    private String                chosenParentIssue;
+    private String                savedEstimatedTime;
+    private String                supervisorsListString;
+    private ArrayList<Uri>            attachmentList = new ArrayList<>();
+    private ArrayMap<Integer, String> supervisorIds  = new ArrayMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,7 +212,6 @@ public class NewTaskActivity extends AppCompatActivity
                 return false;
             }
         });
-        mChosenProjectId = (TextView) projects.findViewById(R.id.new_task_chosen_project_id);
 
         return projects;
     }
@@ -225,6 +226,16 @@ public class NewTaskActivity extends AppCompatActivity
         // mSubject = new EditText(this);
         mSubject.setHint(getString(R.string.new_task_subject_label));
         mSubject.setSingleLine();
+        mSubject.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (b) {
+                    InputMethodManager imm = (InputMethodManager)
+                            getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(view, 0);
+                }
+            }
+        });
         mSubject.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -259,6 +270,16 @@ public class NewTaskActivity extends AppCompatActivity
                 R.layout.new_task_description, null, false);
         mDescription = (EditText) descriptionContainer.findViewById(R.id.new_task_description);
         mDescription.setHint(getString(R.string.new_task_description_label));
+        mDescription.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (b) {
+                    InputMethodManager imm = (InputMethodManager)
+                            getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(view, 0);
+                }
+            }
+        });
         mDescription.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -321,16 +342,17 @@ public class NewTaskActivity extends AppCompatActivity
         mAssignedTo.setThreshold(1);
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        mAssignedTo.setDropDownWidth((int) (displayMetrics.widthPixels*0.8));
+        mAssignedTo.setDropDownWidth((int) (displayMetrics.widthPixels * 0.8));
         mAssignedTo.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
-                if(b){
+                if (b) {
                     InputMethodManager imm = (InputMethodManager)
                             getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(),
+                                                InputMethodManager.HIDE_IMPLICIT_ONLY);
                     mAssignedTo.showDropDown();
-                }else{
+                } else {
                     mAssignedTo.dismissDropDown();
                 }
             }
@@ -359,7 +381,7 @@ public class NewTaskActivity extends AppCompatActivity
                 chosenAssignedToID = mProjectMemberships.get(i).getUser().getId();
                 chosenAssignedTo = mProjectMemberships.get(i).getUser().getName();
             }
-        } );
+        });
         mAssignedTo.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -373,6 +395,18 @@ public class NewTaskActivity extends AppCompatActivity
     private View createEstimatedTimeStep() {
         mEstimatedTime = new EditText(this);
         mEstimatedTime.setSingleLine(true);
+        mEstimatedTime.setRawInputType(
+                InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        mEstimatedTime.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (b) {
+                    InputMethodManager imm = (InputMethodManager)
+                            getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(view, 0);
+                }
+            }
+        });
         mEstimatedTime.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -408,17 +442,16 @@ public class NewTaskActivity extends AppCompatActivity
         mParentIssue.setThreshold(2);
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        mParentIssue.setDropDownWidth((int) (displayMetrics.widthPixels*0.8));
+        mParentIssue.setDropDownWidth((int) (displayMetrics.widthPixels * 0.8));
 
-        mParentIssue.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mParentIssue.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                verticalStepperForm.setActiveStepAsCompleted();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
+            public void onFocusChange(View view, boolean b) {
+                if (b) {
+                    InputMethodManager imm = (InputMethodManager)
+                            getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(view, 0);
+                }
             }
         });
 
@@ -461,7 +494,7 @@ public class NewTaskActivity extends AppCompatActivity
         mParentIssue.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_DONE){
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
                     checkParentIssueStep();
                 }
                 verticalStepperForm.goToNextStep();
@@ -519,7 +552,7 @@ public class NewTaskActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_GET && resultCode == RESULT_OK) {
             String list = "";
-            Uri uri;
+            Uri    uri;
             try {
                 for (int i = 0; i < data.getClipData().getItemCount(); i++) {
                     uri = data.getClipData().getItemAt(i).getUri();
@@ -546,28 +579,13 @@ public class NewTaskActivity extends AppCompatActivity
         mSupervisorsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mProgressBar.setVisibility(View.VISIBLE);
                 SupervisorListDialog dialog = new SupervisorListDialog();
-                dialog.show(getSupportFragmentManager(),"SupervisorListDialog",
+                dialog.show(getSupportFragmentManager(), "SupervisorListDialog",
                             mProjectMemberships, supervisorIds);
             }
         });
         mSupervisors = (TextView) supervisors.findViewById(R.id.new_task_supervisors);
-        mSupervisors.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
         mSupervisors.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -650,16 +668,6 @@ public class NewTaskActivity extends AppCompatActivity
         }
     }
 
-    private void checkAssignedToStep() {
-        if (mAssignedTo.getText().length() > 0) {
-            verticalStepperForm.setActiveStepAsCompleted();
-            //verticalStepperForm.goToNextStep();
-        } else {
-            String errorMessage = getString(R.string.new_task_empty_assigned_to_error);
-            verticalStepperForm.setActiveStepAsUncompleted(errorMessage);
-        }
-    }
-
     private void checkParentIssueStep() {
         String content = mParentIssue.getText().toString();
         if (content.isEmpty() || content.length() > 4) {
@@ -701,9 +709,9 @@ public class NewTaskActivity extends AppCompatActivity
             }
         }
 
-        String[] stepNames = getResources().getStringArray(R.array.new_task_steps);
-        SpannableString[] ss = new SpannableString[stepNames.length];
-        int i = 0;
+        String[]          stepNames = getResources().getStringArray(R.array.new_task_steps);
+        SpannableString[] ss        = new SpannableString[stepNames.length];
+        int               i         = 0;
         for (String name : stepNames) {
             ss[i] = new SpannableString(name + ": ");
             ss[i].setSpan(new StyleSpan(Typeface.BOLD), 0, ss[i].length(), 0);
@@ -746,19 +754,67 @@ public class NewTaskActivity extends AppCompatActivity
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(STATE_PROJECT_ID, chosenProjectID);
-        //outState.putString(STATE_PROJECT_NAME, chosenProjectName);
-        //outState.putString(STATE_SUBJECT, savedSubject);
-        //outState.putString(STATE_DESCRIPTION, savedDescription);
-        outState.putInt(STATE_ASSIGNED_TO_ID, chosenAssignedToID);
-        //outState.putString(STATE_ASSIGNED_TO, chosenAssignedTo);
-        //outState.putString(STATE_PRIORITY, chosenPriority);
-        //outState.putString(STATE_ESTIMATED_TIME, savedEstimatedTime);
-        outState.putString(STATE_PARENT_ISSUE_ID, chosenParentIssueId);
-        //outState.putString(STATE_PARENT_ISSUE, chosenParentIssue);
-        outState.putParcelableArrayList(STATE_ATTACHMENTS, attachmentList);
-        ArrayList<Integer> supervisorIdList = new ArrayList<>(supervisorIds.keySet());
-        outState.putIntegerArrayList(STATE_SUPERVISORS, supervisorIdList);
+        try {
+            outState.putString(STATE_PROJECT_ID, chosenProjectID);
+            outState.putString(STATE_PROJECT_NAME, chosenProjectName);
+            //outState.putString(STATE_SUBJECT, savedSubject);
+            //outState.putString(STATE_DESCRIPTION, savedDescription);
+            outState.putInt(STATE_ASSIGNED_TO_ID, chosenAssignedToID);
+            outState.putString(STATE_ASSIGNED_TO, chosenAssignedTo);
+            outState.putString(STATE_PRIORITY, chosenPriority);
+            outState.putString(STATE_ESTIMATED_TIME, savedEstimatedTime);
+            outState.putString(STATE_PARENT_ISSUE_ID, chosenParentIssueId);
+            //outState.putString(STATE_PARENT_ISSUE, chosenParentIssue);
+            outState.putParcelableArrayList(STATE_ATTACHMENTS, attachmentList);
+            ArrayList<Integer> supervisorIdList = new ArrayList<>(supervisorIds.keySet());
+            ArrayList<String> supervisorNamesList = new ArrayList<>(supervisorIds.values());
+            outState.putIntegerArrayList(STATE_SUPERVISORS, supervisorIdList);
+            outState.putStringArrayList(STATE_SUPERVISORS_NAMES, supervisorNamesList);
+            outState.putParcelableArrayList(STATE_PROJECT_MEMBERS, mProjectMemberships);
+        }catch (NullPointerException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        chosenProjectID = savedInstanceState.getString(STATE_PROJECT_ID);
+        chosenProjectName = savedInstanceState.getString(STATE_PROJECT_NAME);
+        mChosenProject.setText(savedInstanceState.getString(STATE_PROJECT_NAME));
+
+        savedSubject = mSubject.getText().toString();
+        savedDescription = mDescription.getText().toString();
+        chosenPriority = mPriority.getSelectedItem().toString();
+
+        chosenAssignedTo = savedInstanceState.getString(STATE_ASSIGNED_TO);
+        chosenAssignedToID = savedInstanceState.getInt(STATE_ASSIGNED_TO_ID);
+        mAssignedTo.setText(savedInstanceState.getString(STATE_ASSIGNED_TO));
+
+        chosenPriority =savedInstanceState.getString(STATE_PRIORITY);
+
+        savedEstimatedTime = savedInstanceState.getString(STATE_ESTIMATED_TIME);
+        mEstimatedTime.setText(savedInstanceState.getString(STATE_ESTIMATED_TIME));
+
+        chosenParentIssueId = savedInstanceState.getString(STATE_PARENT_ISSUE_ID);
+        chosenParentIssue = mParentIssue.getText().toString();
+
+        attachmentList = savedInstanceState.getParcelableArrayList(STATE_ATTACHMENTS);
+        String list = "";
+        for (Uri uri:attachmentList) {
+            String name = DocumentFile.fromSingleUri(this, uri).getName();
+            list = list + name + "\n";
+        }
+        mAttachmentsList.setText(list);
+
+        list = "";
+        for (String name:savedInstanceState.getStringArrayList(STATE_SUPERVISORS_NAMES)) {
+            list = list + name+"\n";
+        }
+        mSupervisors.setText(list);
+        supervisorsListString = list;
+        generateConfirmationText();
     }
 
     @Override
@@ -767,7 +823,7 @@ public class NewTaskActivity extends AppCompatActivity
     }
 
     @Override
-    public void saveMembersList(List<Membership> memberships) {
+    public void saveMembersList(ArrayList<Membership> memberships) {
         mProjectMemberships = memberships;
         createAdapterForAssignedTo();
     }
@@ -801,7 +857,6 @@ public class NewTaskActivity extends AppCompatActivity
         chosenProjectID = String.valueOf(project.getId());
         chosenProjectName = project.getName();
         mChosenProject.setText(project.getName());
-
     }
 
     //for supervisors list

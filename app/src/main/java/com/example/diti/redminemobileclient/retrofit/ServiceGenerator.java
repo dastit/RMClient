@@ -25,18 +25,23 @@ public class ServiceGenerator {
 
     private static HttpLoggingInterceptor logging = new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
 
-
-    public static <S> S createService(Class<S> serviceClass, File cachePath){
-        return createService(serviceClass, null, null, cachePath);
-    }
-
     public static <S> S createService(Class<S> serviceClass, String login, String password, File cachePath){
+        int   cacheSize = 10 * 1024 * 1024; // 10 MB
+        Cache cache     = new Cache(cachePath, cacheSize);
+
+        httpClient.cache(cache);
+
         if (!TextUtils.isEmpty(login) && !TextUtils.isEmpty(password)){
             String authToken = Credentials.basic(login, password);
-            return  createService(serviceClass, authToken, cachePath);
+            AuthenticationInterceptor authinterceptor = new AuthenticationInterceptor (authToken,
+                                                                                       true);
+            buildService(authinterceptor);
         }
-        return createService(serviceClass, null, cachePath);
+        return retrofit.create(serviceClass);
+
+
     }
+
     public static <S> S createService(Class<S> serviceClass, final String authToken, File cachePath){
 
         int   cacheSize = 10 * 1024 * 1024; // 10 MB
@@ -45,25 +50,30 @@ public class ServiceGenerator {
         httpClient.cache(cache);
 
         if(!TextUtils.isEmpty(authToken)){
-            AuthenticationInterceptor authinterceptor = new AuthenticationInterceptor (authToken);
-            CacheInterceptor cacheInterceptor = new CacheInterceptor();
-
-            if(!httpClient.interceptors().contains(logging) || !httpClient.interceptors().contains(authinterceptor)){
-                if(!httpClient.interceptors().contains(authinterceptor)){
-                    httpClient.addInterceptor(authinterceptor);
-                }
-                if(!httpClient.interceptors().contains(logging)){
-                    httpClient.addInterceptor(logging);
-                }
-
-                if(!httpClient.networkInterceptors().contains(cacheInterceptor)){
-                    httpClient.addNetworkInterceptor(cacheInterceptor);
-                }
-
-                builder.client(httpClient.build());
-                retrofit = builder.build();
-            }
+            AuthenticationInterceptor authinterceptor = new AuthenticationInterceptor (authToken,
+                                                                                       false);
+            buildService(authinterceptor);
         }
         return retrofit.create(serviceClass);
+    }
+
+    private static void buildService(AuthenticationInterceptor authinterceptor) {
+        CacheInterceptor cacheInterceptor = new CacheInterceptor();
+
+        if(!httpClient.interceptors().contains(logging) || !httpClient.interceptors().contains(authinterceptor)){
+            if(!httpClient.interceptors().contains(authinterceptor)){
+                httpClient.addInterceptor(authinterceptor);
+            }
+            if(!httpClient.interceptors().contains(logging)){
+                httpClient.addInterceptor(logging);
+            }
+
+            if(!httpClient.networkInterceptors().contains(cacheInterceptor)){
+                httpClient.addNetworkInterceptor(cacheInterceptor);
+            }
+
+            builder.client(httpClient.build());
+            retrofit = builder.build();
+        }
     }
 }

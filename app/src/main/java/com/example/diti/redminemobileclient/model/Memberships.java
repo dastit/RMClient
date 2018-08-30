@@ -20,7 +20,7 @@ public class Memberships {
     private Integer limit;
     @SerializedName("memberships")
     @Expose
-    private List<Membership> memberships = new ArrayList<Membership>();
+    private ArrayList<Membership> memberships = new ArrayList<Membership>();
 
     public Integer getTotalCount() {
         return totalCount;
@@ -46,11 +46,11 @@ public class Memberships {
         this.limit = limit;
     }
 
-    public List<Membership> getMemberships() {
+    public ArrayList<Membership> getMemberships() {
         return memberships;
     }
 
-    public void setMemberships(List<Membership> memberships) {
+    public void setMemberships(ArrayList<Membership> memberships) {
         this.memberships = memberships;
     }
 

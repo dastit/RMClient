@@ -153,6 +153,13 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
                                          public void run(AccountManagerFuture<Bundle> future) {
                                              try {
                                                  Bundle result = future.getResult();
+                                                 Intent intent = result.getParcelable(AccountManager
+                                                                                              .KEY_INTENT);
+                                                 if(intent !=null){
+                                                     Toast.makeText(MainActivity.this, intent
+                                                             .getStringExtra(AccountManager
+                                                                                         .KEY_ERROR_MESSAGE), Toast.LENGTH_LONG).show();
+                                                 }
                                                  authToken = result.getString(AccountManager.KEY_AUTHTOKEN);
                                                  mAccountManager.invalidateAuthToken(account.type, authToken);
                                                  Log.d(TAG, "Token invalidated");

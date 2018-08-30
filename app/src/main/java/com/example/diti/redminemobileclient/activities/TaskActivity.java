@@ -89,7 +89,7 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
         mDatabase = Room.databaseBuilder(getApplicationContext(), IssueDatabase.class, "issue")
                 .fallbackToDestructiveMigration()
                 .build();
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "", getCacheDir());
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, getCacheDir());
         IssueRepository repository = new IssueRepository(client, mDatabase.mIssueDao(), this);
         IssueViewModelFactory factory = new IssueViewModelFactory(repository);
         mIssueViewModel = ViewModelProviders.of(this, factory).get(IssueViewModel.class);

@@ -67,7 +67,7 @@ public class TaskListFragment extends Fragment {
     private PagedTaskListRepository           repository;
     private ProgressBar                       mProgressBar;
     private SharedPreferences                 mSharedPreferences;
-    private FloatingActionButton mCreateNewTaskButton;
+    private FloatingActionButton              mCreateNewTaskButton;
     private SharedPreferences.Editor          mEditor;
 
     public TaskListFragment() {
@@ -75,7 +75,7 @@ public class TaskListFragment extends Fragment {
 
     public static TaskListFragment newInstance(String token) {
         TaskListFragment fragment = new TaskListFragment();
-        Bundle args = new Bundle();
+        Bundle           args     = new Bundle();
         args.putString(ARG_TOKEN, token);
         fragment.setArguments(args);
         return fragment;
@@ -87,8 +87,8 @@ public class TaskListFragment extends Fragment {
         setRetainInstance(true);
         mAuthToken = getArguments().getString(ARG_TOKEN);
 
-        mSharedPreferences = getActivity().getSharedPreferences(getString(R.string.preference_file_key), getActivity().MODE_PRIVATE);
-
+        mSharedPreferences = getActivity().getSharedPreferences(
+                getString(R.string.preference_file_key), getActivity().MODE_PRIVATE);
     }
 
     @Override
@@ -96,8 +96,9 @@ public class TaskListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tasklist_list, container, false);
 
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, "", getActivity()
-                .getCacheDir());
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
+                mAuthToken, getActivity()
+                        .getCacheDir());
         repository = new PagedTaskListRepository(client);
         PagedTasksListViewModelFactory factory = new PagedTasksListViewModelFactory(repository);
         viewModel = ViewModelProviders.of(this, factory).get(PagedTasksListViewModel.class);
@@ -123,7 +124,6 @@ public class TaskListFragment extends Fragment {
             public void onChanged(@Nullable PagedList<Issue> issues) {
                 swipeContainer.setRefreshing(false);
                 mAdapter.submitList(issues);
-
             }
         });
         mRecyclerView.setAdapter(mAdapter);
@@ -131,23 +131,26 @@ public class TaskListFragment extends Fragment {
         final SwipeController swipeController = new SwipeController(new SwipeControllerActions() {
             @Override
             public void onRightClicked(int position) {
-                Issue mIssue = mAdapter.getItemClicked(position);
-                Context context = getActivity().getApplicationContext();
-                SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.preference_file_key), context.MODE_PRIVATE);
+                Issue             mIssue            = mAdapter.getItemClicked(position);
+                Context           context           = getActivity().getApplicationContext();
+                SharedPreferences sharedPreferences = context.getSharedPreferences(
+                        getString(R.string.preference_file_key), context.MODE_PRIVATE);
                 if (sharedPreferences.contains(getString(R.string.task_id_started_key)) &&
-                    sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) !=
-                    mIssue.getIssueid()) {
+                        sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) !=
+                                mIssue.getIssueid()) {
                     Toast.makeText(getActivity(), "Закончите выполнение задачи №" +
-                                                  sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) +
-                                                  " прежде чем запускать новую", Toast.LENGTH_LONG)
-                            .show();
+                            sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) +
+                            " прежде чем запускать новую", Toast.LENGTH_LONG)
+                         .show();
                 } else {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putInt(getString(R.string.task_id_started_key), mIssue.getIssueid());
-                    editor.putLong(getString(R.string.task_time_started_key), System.currentTimeMillis());
+                    editor.putLong(getString(R.string.task_time_started_key),
+                                   System.currentTimeMillis());
                     editor.commit();
                     createNotification(mIssue);
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(
+                            getActivity());
                     notificationManager.notify(111, notification);
                     if (mListener != null) {
                         mListener.invalidateFreezedTask();
@@ -180,20 +183,30 @@ public class TaskListFragment extends Fragment {
 
     private void createNotification(Issue mIssue) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getString(R.string.channel_name);
-            String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            CharSequence        name        = getString(R.string.channel_name);
+            String              description = getString(R.string.channel_description);
+            int                 importance  = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel     = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
-            NotificationManager notificationManager = getActivity().getSystemService(NotificationManager.class);
+            NotificationManager notificationManager = getActivity().getSystemService(
+                    NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
-            notificationBuilder = new NotificationCompat.Builder(getActivity(), CHANNEL_ID).setSmallIcon(R.drawable.outline_timer_24)
-                    .setContentTitle("Выполняется задача №" + mIssue.getIssueid())
-                    .setContentText(mIssue.getSubject());
+            notificationBuilder = new NotificationCompat.Builder(getActivity(),
+                                                                 CHANNEL_ID).setSmallIcon(
+                    R.drawable.outline_timer_24)
+                                                                            .setContentTitle(
+                                                                                    "Выполняется задача №" + mIssue
+                                                                                            .getIssueid())
+                                                                            .setContentText(
+                                                                                    mIssue.getSubject());
         } else {
-            notificationBuilder = new NotificationCompat.Builder(getActivity()).setSmallIcon(R.drawable.outline_timer_24)
-                    .setContentTitle("Выполняется задача №" + mIssue.getIssueid())
-                    .setContentText(mIssue.getSubject());
+            notificationBuilder = new NotificationCompat.Builder(getActivity()).setSmallIcon(
+                    R.drawable.outline_timer_24)
+                                                                               .setContentTitle(
+                                                                                       "Выполняется задача №" + mIssue
+                                                                                               .getIssueid())
+                                                                               .setContentText(
+                                                                                       mIssue.getSubject());
         }
 
         Intent playIntent = new Intent(getActivity(), TaskActivity.class);
@@ -201,8 +214,10 @@ public class TaskListFragment extends Fragment {
         playIntent.putExtra(TaskActivity.EXTRA_TOKEN, mAuthToken);
         playIntent.putExtra(TaskActivity.IS_TASK_STOPED_FROM_NOTIFICATION, true);
         playIntent.setAction(ACTION_STOP);
-        PendingIntent pendingPlayIntent = PendingIntent.getActivity(getActivity(), 0, playIntent, 0);
-        NotificationCompat.Action playAction = new NotificationCompat.Action(R.drawable.outline_stop_24, "Stop", pendingPlayIntent);
+        PendingIntent             pendingPlayIntent = PendingIntent.getActivity(getActivity(), 0,
+                                                                                playIntent, 0);
+        NotificationCompat.Action playAction        = new NotificationCompat.Action(
+                R.drawable.outline_stop_24, "Stop", pendingPlayIntent);
         notificationBuilder.addAction(playAction);
         notificationBuilder.setAutoCancel(true);
 
@@ -217,7 +232,7 @@ public class TaskListFragment extends Fragment {
             mListener = (OnListFragmentInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                                       + " must implement OnListFragmentInteractionListener");
+                                               + " must implement OnListFragmentInteractionListener");
         }
     }
 
@@ -237,7 +252,8 @@ public class TaskListFragment extends Fragment {
     }
 
     //класс адаптера
-    public class TaskListAdapter extends PagedListAdapter<Issue, TaskListAdapter.TaskListViewHolder> {
+    public class TaskListAdapter
+            extends PagedListAdapter<Issue, TaskListAdapter.TaskListViewHolder> {
 
         protected TaskListAdapter() {
             super(DIFF_CALLBACK);
@@ -247,7 +263,7 @@ public class TaskListFragment extends Fragment {
         @Override
         public TaskListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(getActivity())
-                    .inflate(R.layout.fragment_tasklist, parent, false);
+                                   .inflate(R.layout.fragment_tasklist, parent, false);
             TaskListViewHolder vh = new TaskListViewHolder(v);
             return vh;
         }
@@ -255,12 +271,11 @@ public class TaskListFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull TaskListViewHolder holder, int position) {
             holder.bind(getItem(position));
-
         }
 
         @Override
         public void onViewAttachedToWindow(@NonNull TaskListViewHolder holder) {
-            if(mListener!=null){
+            if (mListener != null) {
                 mListener.setProgressBar();
             }
         }
@@ -288,11 +303,10 @@ public class TaskListFragment extends Fragment {
                 mTaskProject = itemView.findViewById(R.id.task_project);
                 int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
                 mTaskProject.setMaxWidth(screenWidth / 3);
-                mProjectFirstLetterImageView = itemView.findViewById(R.id.project_letter_image_view);
+                mProjectFirstLetterImageView = itemView.findViewById(
+                        R.id.project_letter_image_view);
                 mProjectFirstLetterTextView = itemView.findViewById(R.id.project_letter_text_view);
                 mTaskId = itemView.findViewById(R.id.task_id);
-
-
             }
 
             public void bind(Issue issue) {
@@ -303,11 +317,11 @@ public class TaskListFragment extends Fragment {
                     mTaskProject.setText("");
                 } else {
                     if (issue.getIssueid() ==
-                        mSharedPreferences.getInt(getString(R.string.task_id_started_key), 0)) {
+                            mSharedPreferences.getInt(getString(R.string.task_id_started_key), 0)) {
                         itemView.setVisibility(View.GONE);
                         itemView.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
                         if (mSharedPreferences.contains(getString(R.string.task_id_started_key)) &&
-                            mListener != null) {
+                                mListener != null) {
                             mListener.showFreezedTask(issue);
                         }
                         return;
@@ -317,7 +331,7 @@ public class TaskListFragment extends Fragment {
                         @Override
                         public void onClick(View v) {
 
-                            Intent intent = new Intent(getActivity(), TaskActivity.class);
+                            Intent  intent  = new Intent(getActivity(), TaskActivity.class);
                             Integer issueId = issue.getIssueid();
                             intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
                             intent.putExtra(TaskActivity.EXTRA_TOKEN, mAuthToken);

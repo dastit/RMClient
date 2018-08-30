@@ -19,9 +19,9 @@ import retrofit2.Response;
 
 public class ParentIssueAsyncTask extends AsyncTask<Void, Void, List<Issue>> {
     private WeakReference<AppCompatActivity> contextRef;
-    private String token;
-    private TaskDelegate mDelegate;
-    private String projectId;
+    private String                           token;
+    private TaskDelegate                     mDelegate;
+    private String                           projectId;
 
     public interface TaskDelegate {
         void createAdaptedForParentIssues(List<Issue> issues);
@@ -36,9 +36,10 @@ public class ParentIssueAsyncTask extends AsyncTask<Void, Void, List<Issue>> {
 
     protected List<Issue> doInBackground(Void... voids) {
         List<Issue> issues = new ArrayList<>();
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token, null, contextRef
-                .get()
-                .getCacheDir());
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token,
+                                                                                          contextRef
+                                                                                                  .get()
+                                                                                                  .getCacheDir());
         Call<Issues> call = client.reposForTasksInProject(projectId, 0, 25, "name");
         try {
             Response<Issues> response = call.execute();
@@ -56,7 +57,9 @@ public class ParentIssueAsyncTask extends AsyncTask<Void, Void, List<Issue>> {
 //            }
 
         } catch (IOException | NullPointerException e) {
-            Toast.makeText(contextRef.get(), contextRef.get().getString(R.string.connection_mistake), Toast.LENGTH_LONG).show();
+            Toast.makeText(contextRef.get(),
+                           contextRef.get().getString(R.string.connection_mistake),
+                           Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
         return issues;

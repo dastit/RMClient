@@ -20,14 +20,14 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, List<Membership>> {
+public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, ArrayList<Membership>> {
     private WeakReference<AppCompatActivity> contextRef;
     private String token;
     private TaskDelegate mDelegate;
     private String projectId;
 
     public interface TaskDelegate {
-        void saveMembersList(List<Membership> memberships);
+        void saveMembersList(ArrayList<Membership> memberships);
     }
 
     public GetMembershipUsersAsyncTask(AppCompatActivity context, String authToken,
@@ -38,10 +38,9 @@ public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, List<Memb
         this.projectId = projectId;
     }
 
-    protected List<Membership> doInBackground(Void... voids) {
-        List<Membership> userMembershipList = new ArrayList<>();
+    protected ArrayList<Membership> doInBackground(Void... voids) {
+        ArrayList<Membership> userMembershipList = new ArrayList<>();
         RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token,
-                                                                                          null,
                                                                                           contextRef
                                                                                                   .get()
                                                                                                   .getCacheDir());
@@ -56,7 +55,7 @@ public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, List<Memb
     }
 
     @Override
-    protected void onPostExecute(List<Membership> memberships) {
+    protected void onPostExecute(ArrayList<Membership> memberships) {
         mDelegate.saveMembersList(memberships);
     }
 }

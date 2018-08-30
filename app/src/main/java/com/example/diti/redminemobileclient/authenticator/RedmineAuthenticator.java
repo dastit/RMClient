@@ -51,12 +51,13 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
     public Bundle getAuthToken(final AccountAuthenticatorResponse response, final Account account, String authTokenType, Bundle options) throws NetworkErrorException {
         final AccountManager am = AccountManager.get(mContext);
 
-        String authToken = am.peekAuthToken(account, authTokenType);
+        //String authToken = am.peekAuthToken(account, authTokenType);
+        String authToken = am.getPassword(account);
         final Bundle result = new Bundle();
 
         //если токен не закэшировался при создании аккаунта - запрашиваем токен опять по логину паролю
         if(TextUtils.isEmpty(authToken)){
-            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(account.name, am.getPassword(account), mContext.getCacheDir());
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(am.getPassword(account), mContext.getCacheDir());
             Call<Users> call =
                     client.reposForUser();
             try {
@@ -67,38 +68,18 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
                     result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
                     result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
                     am.setAuthToken(account, account.type, authToken);
-                }
-                else{
+                }else{
                     final Intent intent = new Intent(mContext, LoginActivity.class);
                     intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
                     intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
                     result.putParcelable(AccountManager.KEY_INTENT, intent);
+                    result.putString(AccountManager.KEY_ERROR_MESSAGE, "Ошибка авторизации");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
                 result.putString(AccountManager.KEY_ERROR_MESSAGE, "Не удалось получить токен");
             }
-//            call.enqueue(new Callback<Users>() {
-//                //если успешно зашли - опять пытаемся закинуть токен в AM, возвращаем наконец токен
-//                @Override
-//                public void onResponse(Call<Users> call, IssueResponse<Users> response) {
-//                    if (response.isSuccessful()) {
-//                        String newAuthToken = response.body().getUser().getApiKey();
-//                        result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
-//                        result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
-//                        result.putString(AccountManager.KEY_AUTHTOKEN, newAuthToken);
-//                        am.setAuthToken(account, account.type, newAuthToken);
-//                    }
-//                }
-//                //если вход не удался - открываем окно LoginActivity
-//                @Override
-//                public void onFailure(Call<Users> call, Throwable t) {
-//                    final Intent intent = new Intent(mContext, LoginActivity.class);
-//                    intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
-//                    intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
-//                    result.putParcelable(AccountManager.KEY_INTENT, intent);
-//                }
-//            });
+
         }
 
         //Фантастика, токен закешировался, возвращаем его
