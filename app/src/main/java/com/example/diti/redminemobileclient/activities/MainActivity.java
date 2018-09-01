@@ -62,8 +62,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
         setContentView(R.layout.activity_main);
         initToolbars(savedInstanceState);
         mProgressView = findViewById(R.id.central_fragment_progress);
-        mFreezedIssue = (CardView)findViewById(R.id.freezed_issue);
-
+        mFreezedIssue = (CardView) findViewById(R.id.freezed_issue);
 
         if (savedInstanceState != null) {
             Log.d(TAG, "Restore state");
@@ -72,7 +71,11 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
                 isAuthNeeded = false;
             }
         }
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         if (isAuthNeeded == true) {
             mProgressView.setVisibility(View.VISIBLE);
             mAccountManager = AccountManager.get(this);
@@ -98,8 +101,9 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
             }
 
         }
-
     }
+
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -226,13 +230,19 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     }
 
     private void initCentralFragment(String token) {
-
-        if (findViewById(R.id.fragment_container) != null) {
-            TaskListFragment taskListFragment = TaskListFragment.newInstance(token);
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragment_container, taskListFragment, TASK_LIST_FRAGMENT_TAG)
-                    .commit();
+        try{
+            if (findViewById(R.id.fragment_container) != null) {
+                TaskListFragment taskListFragment = TaskListFragment.newInstance(token);
+                getSupportFragmentManager().beginTransaction()
+                                           .add(R.id.fragment_container, taskListFragment, TASK_LIST_FRAGMENT_TAG)
+                                           .commit();
+            }
+        }catch (IllegalStateException e){
+            Toast.makeText(this, "Не удалось загрузить данные, пожалуйста, перезапустите " +
+                    "приложение.",Toast.LENGTH_LONG).show();
+            e.printStackTrace();
         }
+
     }
 
     //методы для фрагмента AccountListFragment
