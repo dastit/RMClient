@@ -6,6 +6,7 @@ import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
+import android.arch.lifecycle.Lifecycle;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -39,11 +40,15 @@ import com.example.diti.redminemobileclient.model.Issue;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity implements AccountListFragment.AccountListListener, TaskListFragment.OnListFragmentInteractionListener, ProjectListFragment.OnListFragmentInteractionListener, TaskStopDialog.OnDialogIterationListener {
+public class MainActivity extends AppCompatActivity
+        implements AccountListFragment.AccountListListener,
+                   TaskListFragment.OnListFragmentInteractionListener,
+                   ProjectListFragment.OnListFragmentInteractionListener,
+                   TaskStopDialog.OnDialogIterationListener {
     private static final String TAG                       = "MainActivity";
     private static final String STATE_AUTH_TOKEN          = "state_auth_token";
     private static final String PROJECT_LIST_FRAGMENT_TAG = "projectList";
-    public static final String  TASK_LIST_FRAGMENT_TAG    = "taskList";
+    public static final  String TASK_LIST_FRAGMENT_TAG    = "taskList";
 
     private AccountManager      mAccountManager;
     private AccountListFragment mAccountListFragment;
@@ -52,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     private Toolbar             topToolbar;
     private ActionBar           ab;
     private String              authToken;
-    private CardView mFreezedIssue;
+    private CardView            mFreezedIssue;
 
     private boolean isAuthNeeded = true;
 
@@ -69,14 +74,15 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
             authToken = savedInstanceState.getString(STATE_AUTH_TOKEN);
             if (authToken != null) {
                 isAuthNeeded = false;
+                initCentralFragment(authToken);
             }
         }
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (isAuthNeeded == true) {
+    protected void onStart() {
+        super.onStart();
+        if (isAuthNeeded) {
             mProgressView.setVisibility(View.VISIBLE);
             mAccountManager = AccountManager.get(this);
             int accNum = mAccountManager.getAccounts().length;
@@ -91,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
             //если аккаунтов много - предлагаем выбрать аккаунт
             else {
                 CharSequence[] names = new CharSequence[mAccountManager.getAccounts().length];
-                int i = 0;
+                int            i     = 0;
                 for (Account account : mAccountManager.getAccounts()) {
                     names[i] = account.name;
                     i++;
@@ -99,11 +105,10 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
                 mAccountListFragment = AccountListFragment.newInstance(names);
                 mAccountListFragment.show(getSupportFragmentManager(), "AccountListFragment");
             }
-
+        }else{
+            initCentralFragment(authToken);
         }
     }
-
-
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -129,13 +134,15 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     }
 
     private void addNewAccount() {
-        mAccountManager.addAccount(RedmineAccount.TYPE, RedmineAccount.TOKEN_FULL_ACCESS, null, null, this,
+        mAccountManager.addAccount(RedmineAccount.TYPE, RedmineAccount.TOKEN_FULL_ACCESS, null,
+                                   null, this,
                                    new AccountManagerCallback<Bundle>() {
                                        @Override
                                        public void run(AccountManagerFuture<Bundle> future) {
                                            try {
                                                Bundle result = future.getResult();
-                                               authToken = result.getString(AccountManager.KEY_PASSWORD);
+                                               authToken = result.getString(
+                                                       AccountManager.KEY_PASSWORD);
                                                initCentralFragment(authToken);
                                            } catch (OperationCanceledException e) {
                                                e.printStackTrace();
@@ -159,20 +166,24 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
                                                  Bundle result = future.getResult();
                                                  Intent intent = result.getParcelable(AccountManager
                                                                                               .KEY_INTENT);
-                                                 if(intent !=null){
+                                                 if (intent != null) {
                                                      Toast.makeText(MainActivity.this, intent
-                                                             .getStringExtra(AccountManager
-                                                                                         .KEY_ERROR_MESSAGE), Toast.LENGTH_LONG).show();
+                                                                            .getStringExtra(AccountManager
+                                                                                                    .KEY_ERROR_MESSAGE),
+                                                                    Toast.LENGTH_LONG).show();
                                                  }
-                                                 authToken = result.getString(AccountManager.KEY_AUTHTOKEN);
-                                                 mAccountManager.invalidateAuthToken(account.type, authToken);
+                                                 authToken = result.getString(
+                                                         AccountManager.KEY_AUTHTOKEN);
+                                                 mAccountManager.invalidateAuthToken(account.type,
+                                                                                     authToken);
                                                  Log.d(TAG, "Token invalidated");
                                                  if (future.isDone() && !future.isCancelled()) {
                                                      initCentralFragment(authToken);
                                                  }
                                              } catch (OperationCanceledException | IOException | AuthenticatorException e) {
-                                                 Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG)
-                                                         .show();
+                                                 Toast.makeText(getApplicationContext(),
+                                                                e.getMessage(), Toast.LENGTH_LONG)
+                                                      .show();
                                                  addNewAccount();
                                              }
                                          }
@@ -206,22 +217,26 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
                                         taskListFragment = TaskListFragment.newInstance(authToken);
                                     }
                                     getSupportFragmentManager().beginTransaction()
-                                            .replace(R.id.fragment_container, taskListFragment, TASK_LIST_FRAGMENT_TAG)
-                                            .commit();
+                                                               .replace(R.id.fragment_container,
+                                                                        taskListFragment,
+                                                                        TASK_LIST_FRAGMENT_TAG)
+                                                               .commit();
 
                                 case R.id.menu_projects://пункт меню "Проекты"
                                     ProjectListFragment projectListFragment = (ProjectListFragment) getSupportFragmentManager()
                                             .findFragmentByTag(PROJECT_LIST_FRAGMENT_TAG);
                                     if (projectListFragment == null) {
-                                        projectListFragment = ProjectListFragment.newInstance(authToken);
+                                        projectListFragment = ProjectListFragment.newInstance(
+                                                authToken);
                                     }
                                     getSupportFragmentManager().beginTransaction()
-                                            .replace(R.id.fragment_container, projectListFragment, PROJECT_LIST_FRAGMENT_TAG)
-                                            .commit();
+                                                               .replace(R.id.fragment_container,
+                                                                        projectListFragment,
+                                                                        PROJECT_LIST_FRAGMENT_TAG)
+                                                               .commit();
                                     mFreezedIssue.setVisibility(View.GONE);
 
                                 case R.id.menu_stat://пункт меню "Статистика"
-
                             }
                         }
                         return true;
@@ -230,19 +245,21 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     }
 
     private void initCentralFragment(String token) {
-        try{
-            if (findViewById(R.id.fragment_container) != null) {
-                TaskListFragment taskListFragment = TaskListFragment.newInstance(token);
-                getSupportFragmentManager().beginTransaction()
-                                           .add(R.id.fragment_container, taskListFragment, TASK_LIST_FRAGMENT_TAG)
-                                           .commit();
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+            try {
+                if (findViewById(R.id.fragment_container) != null) {
+                    TaskListFragment taskListFragment = TaskListFragment.newInstance(token);
+                    getSupportFragmentManager().beginTransaction()
+                                               .add(R.id.fragment_container, taskListFragment,
+                                                    TASK_LIST_FRAGMENT_TAG)
+                                               .commit();
+                }
+            } catch (IllegalStateException e) {
+                Toast.makeText(this, "Не удалось загрузить данные, пожалуйста, перезапустите " +
+                        "приложение.", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
             }
-        }catch (IllegalStateException e){
-            Toast.makeText(this, "Не удалось загрузить данные, пожалуйста, перезапустите " +
-                    "приложение.",Toast.LENGTH_LONG).show();
-            e.printStackTrace();
         }
-
     }
 
     //методы для фрагмента AccountListFragment
@@ -260,17 +277,19 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
     @Override
     public void showFreezedTask(Issue issue) {
         mFreezedIssue.setVisibility(View.VISIBLE);
-        TextView mTaskSubject = (TextView)findViewById(R.id.f_task_subject);
-        TextView  mTaskCreationDate = (TextView)findViewById(R.id.f_task_date);
-        TextView  mTaskProject = (TextView)findViewById(R.id.f_task_project);
-        TextView  mProjectFirstLetterTextView = (TextView)findViewById(R.id.f_project_letter_text_view);
-        TextView  mTaskId = (TextView)findViewById(R.id.f_task_id);
-        ImageButton mStopTimerButton = (ImageButton)findViewById(R.id.f_stop_timer_button);
+        TextView mTaskSubject      = (TextView) findViewById(R.id.f_task_subject);
+        TextView mTaskCreationDate = (TextView) findViewById(R.id.f_task_date);
+        TextView mTaskProject      = (TextView) findViewById(R.id.f_task_project);
+        TextView mProjectFirstLetterTextView = (TextView) findViewById(
+                R.id.f_project_letter_text_view);
+        TextView mTaskId = (TextView) findViewById(R.id.f_task_id);
+        ImageButton mStopTimerButton = (ImageButton) findViewById(
+                R.id.f_stop_timer_button);
 
         mStopTimerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TaskStopDialog dialog  = new TaskStopDialog();
+                TaskStopDialog dialog = new TaskStopDialog();
                 dialog.show(getSupportFragmentManager(), "TaskStopDialog");
             }
         });
@@ -279,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
             @Override
             public void onClick(View v) {
 
-                Intent intent = new Intent(MainActivity.this, TaskActivity.class);
+                Intent  intent  = new Intent(MainActivity.this, TaskActivity.class);
                 Integer issueId = issue.getIssueid();
                 intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
                 intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
@@ -314,8 +333,9 @@ public class MainActivity extends AppCompatActivity implements AccountListFragme
         mFreezedIssue.setVisibility(View.GONE);
         TaskListFragment taskListFragment = TaskListFragment.newInstance(authToken);
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, taskListFragment, TASK_LIST_FRAGMENT_TAG)
-                .commitNow();
+                                   .replace(R.id.fragment_container, taskListFragment,
+                                            TASK_LIST_FRAGMENT_TAG)
+                                   .commitNow();
     }
 }
 

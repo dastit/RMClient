@@ -15,8 +15,7 @@ public class LoginActivity extends AccountAuthenticatorActivity
         implements LoginViaLoginFragment.OnLoginViaLoginFragmentInteractionListener,
                    LoginViaApiKeyFragment.OnLoginViaApiKeyFragmentInteractionListener {
 
-    private static final String TAG              = "LoginActivity";
-    public static final  String EXTRA_TOKEN_TYPE = "com.example.diti.redminemobileclient.EXTRA_TOKEN_TYPE";
+    private static final String TAG = "LoginActivity";
 
 
     @Override
@@ -35,6 +34,14 @@ public class LoginActivity extends AccountAuthenticatorActivity
         setAccountAuthenticatorResult(result);
         setResult(RESULT_OK);
         finish();
+    }
+
+    @Override
+    public void openLoginViaLoginFragment() {
+        LoginViaLoginFragment fragment = LoginViaLoginFragment.newInstance();
+        getFragmentManager().beginTransaction()
+                            .replace(R.id.login_fragment_container, fragment)
+                            .commit();
     }
 
     @Override

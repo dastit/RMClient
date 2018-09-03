@@ -33,6 +33,7 @@ public class LoginViaApiKeyFragment extends Fragment {
     private static final String TAG = "LoginViaApiKeyFragment";
     private EditText mApiKey;
     private Button          mSignInButton;
+    private Button mLoginViaLoginButton;
     private TextInputLayout mApiKeyTextInputLayout;
     private View            mLoginFormView;
     private ProgressBar mProgressView;
@@ -67,6 +68,7 @@ public class LoginViaApiKeyFragment extends Fragment {
         mSignInButton = (Button) v.findViewById(R.id.apikey_sign_in_button);
         mLoginFormView = (View) v.findViewById(R.id.apikey_login_form);
         mProgressView = (ProgressBar)v.findViewById(R.id.login_progress);
+        mLoginViaLoginButton = (Button)v.findViewById(R.id.login_via_login_button);
 
         mApiKeyTextInputLayout.setHint(getString(R.string.prompt_api_key));
 
@@ -74,6 +76,13 @@ public class LoginViaApiKeyFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 attemptLogin();
+            }
+        });
+
+        mLoginViaLoginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mListener.openLoginViaLoginFragment();
             }
         });
         return v;
@@ -177,5 +186,6 @@ public class LoginViaApiKeyFragment extends Fragment {
 
     public interface OnLoginViaApiKeyFragmentInteractionListener {
         void onLoginSuccess(Bundle result);
+        void openLoginViaLoginFragment ();
     }
 }

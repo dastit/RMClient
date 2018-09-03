@@ -80,6 +80,7 @@
     <string name="new_task_parent_issue_is_wrong">Выберите значение из списка</string>
     <string name="action_login_via_apikey">Войти с помощью Api Key</string>
     <string name="prompt_api_key">API KEY</string>
+    <string name="action_login_via_login">Войти с логином / паролем</string>
 
 
     <string-array name="issue_priorities">

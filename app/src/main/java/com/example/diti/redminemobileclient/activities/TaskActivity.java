@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.persistence.room.Room;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -30,6 +31,7 @@ import android.view.SubMenu;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.IssueDatabase;
@@ -181,7 +183,13 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
                     MimeTypeMap myMime = MimeTypeMap.getSingleton();
                     String mimeType = myMime.getMimeTypeFromExtension(file.getName().substring(file.getName().lastIndexOf(".") + 1));
                     intent.setDataAndType(uri, mimeType);
-                    startActivity(intent);
+                    try {
+                        startActivity(intent);
+                    }catch (ActivityNotFoundException e){
+                        Toast.makeText(this, "Для файла не найдено соответствующее приложение",
+                                       Toast.LENGTH_LONG).show();
+                        e.printStackTrace();
+                    }
                     return true;
                 }
                 else{
