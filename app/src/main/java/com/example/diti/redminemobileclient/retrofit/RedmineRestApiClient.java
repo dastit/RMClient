@@ -41,8 +41,11 @@ public class RedmineRestApiClient {
         @GET("/projects.json")
         Call<Projects> reposForProjects(@Query("offset") int offset, @Query("limit") int limit, @Query("sort") String sortByColumn);
 
-        @GET("/issues/{issueId}.json?include=attachments,journals")
+        @GET("/issues/{issueId}.json")
         Call<IssueResponse> reposForTask(@Path("issueId") String issueId);
+
+        @GET("/issues/{issueId}.json?include=attachments,journals")
+        Call<IssueResponse> reposForTaskFull(@Path("issueId") String issueId);
 
         @GET
         Call<ResponseBody> getAttachment (@Url String url);

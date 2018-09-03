@@ -244,8 +244,6 @@ public class TaskListFragment extends Fragment {
 
     //интерфейс взаимодействия с хостовой активностью
     public interface OnListFragmentInteractionListener {
-        void showFreezedTask(Issue issue);
-
         void invalidateFreezedTask();
 
         void setProgressBar();
@@ -320,10 +318,6 @@ public class TaskListFragment extends Fragment {
                             mSharedPreferences.getInt(getString(R.string.task_id_started_key), 0)) {
                         itemView.setVisibility(View.GONE);
                         itemView.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
-                        if (mSharedPreferences.contains(getString(R.string.task_id_started_key)) &&
-                                mListener != null) {
-                            mListener.showFreezedTask(issue);
-                        }
                         return;
                     }
                     mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));

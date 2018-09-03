@@ -34,7 +34,7 @@ public class IssueRepository {
 
         if (isExpired(issue)) {
             Log.d(TAG, "Need new one");
-            Call<IssueResponse> call = mRedmineClient.reposForTask(issueId.toString());
+            Call<IssueResponse> call = mRedmineClient.reposForTaskFull(issueId.toString());
             try {
                 IssueResponse issueResponse = call.execute().body();
                 issue = issueResponse.getIssue();

@@ -8,6 +8,7 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.arch.lifecycle.Lifecycle;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -32,13 +33,22 @@ import android.widget.Toast;
 import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.authenticator.RedmineAccount;
+import com.example.diti.redminemobileclient.authenticator.RedmineAuthenticator;
+import com.example.diti.redminemobileclient.authenticator.RedmineAuthenticatorService;
+import com.example.diti.redminemobileclient.datasources.IssueRepository;
+import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.fragments.AccountListFragment;
 import com.example.diti.redminemobileclient.fragments.ProjectListFragment;
 import com.example.diti.redminemobileclient.fragments.TaskListFragment;
 import com.example.diti.redminemobileclient.fragments.TaskStopDialog;
 import com.example.diti.redminemobileclient.model.Issue;
+import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
 import java.io.IOException;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity
         implements AccountListFragment.AccountListListener,
@@ -254,6 +264,12 @@ public class MainActivity extends AppCompatActivity
                                                     TASK_LIST_FRAGMENT_TAG)
                                                .commit();
                 }
+                SharedPreferences sharedPreferences = getSharedPreferences(
+                        getString(R.string.preference_file_key), MODE_PRIVATE);
+                if(sharedPreferences.contains(getString(R.string.task_id_started_key))){
+                    showFreezedTask(sharedPreferences.getInt(getString(R.string
+                                                                               .task_id_started_key), 0));
+                }
             } catch (IllegalStateException e) {
                 Toast.makeText(this, "Не удалось загрузить данные, пожалуйста, перезапустите " +
                         "приложение.", Toast.LENGTH_LONG).show();
@@ -273,43 +289,55 @@ public class MainActivity extends AppCompatActivity
         addNewAccount();
     }
 
-    //методы для фрагмента TaskListFragment
-    @Override
-    public void showFreezedTask(Issue issue) {
-        mFreezedIssue.setVisibility(View.VISIBLE);
-        TextView mTaskSubject      = (TextView) findViewById(R.id.f_task_subject);
-        TextView mTaskCreationDate = (TextView) findViewById(R.id.f_task_date);
-        TextView mTaskProject      = (TextView) findViewById(R.id.f_task_project);
-        TextView mProjectFirstLetterTextView = (TextView) findViewById(
-                R.id.f_project_letter_text_view);
-        TextView mTaskId = (TextView) findViewById(R.id.f_task_id);
-        ImageButton mStopTimerButton = (ImageButton) findViewById(
-                R.id.f_stop_timer_button);
-
-        mStopTimerButton.setOnClickListener(new View.OnClickListener() {
+    public void showFreezedTask(int issueId) {
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient
+                (authToken, getCacheDir());
+        Call<IssueResponse> call = client.reposForTask(String.valueOf(issueId));
+        call.enqueue(new Callback<IssueResponse>() {
             @Override
-            public void onClick(View v) {
-                TaskStopDialog dialog = new TaskStopDialog();
-                dialog.show(getSupportFragmentManager(), "TaskStopDialog");
+            public void onResponse(Call<IssueResponse> call, Response<IssueResponse> response) {
+                Issue issue = response.body().getIssue();
+                mFreezedIssue.setVisibility(View.VISIBLE);
+                TextView mTaskSubject      = (TextView) findViewById(R.id.f_task_subject);
+                TextView mTaskCreationDate = (TextView) findViewById(R.id.f_task_date);
+                TextView mTaskProject      = (TextView) findViewById(R.id.f_task_project);
+                TextView mProjectFirstLetterTextView = (TextView) findViewById(
+                        R.id.f_project_letter_text_view);
+                TextView mTaskId = (TextView) findViewById(R.id.f_task_id);
+                ImageButton mStopTimerButton = (ImageButton) findViewById(
+                        R.id.f_stop_timer_button);
+
+                mStopTimerButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        TaskStopDialog dialog = new TaskStopDialog();
+                        dialog.show(getSupportFragmentManager(), "TaskStopDialog");
+                    }
+                });
+                mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
+                mFreezedIssue.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        Intent  intent  = new Intent(MainActivity.this, TaskActivity.class);
+                        intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
+                        intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
+                        startActivity(intent);
+                    }
+                });
+                mTaskId.setText("# " + String.valueOf(issueId));
+                mTaskSubject.setText(issue.getSubject());
+                mTaskProject.setText(issue.getProject().getName());
+                String projectName = issue.getProject().getName().substring(0, 1);
+                mProjectFirstLetterTextView.setText(projectName);
+            }
+
+            @Override
+            public void onFailure(Call<IssueResponse> call, Throwable t) {
+
             }
         });
-        mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
-        mFreezedIssue.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-                Intent  intent  = new Intent(MainActivity.this, TaskActivity.class);
-                Integer issueId = issue.getIssueid();
-                intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
-                intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
-                startActivity(intent);
-            }
-        });
-        mTaskId.setText("# " + issue.getIssueid().toString());
-        mTaskSubject.setText(issue.getSubject());
-        mTaskProject.setText(issue.getProject().getName());
-        String projectName = issue.getProject().getName().substring(0, 1);
-        mProjectFirstLetterTextView.setText(projectName);
     }
 
     @Override
