@@ -2,6 +2,7 @@ package com.example.diti.redminemobileclient.model;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
 
@@ -94,23 +95,27 @@ public class Issue  {
     @TypeConverters(IssueJournalTypeConverter.class)
     @SerializedName("journals")
     @Expose
-    private List<IssueJournal> journals = new ArrayList<IssueJournal>();
+    private List<IssueJournal> journals;
 
 
     @TypeConverters(IssueJournalTypeConverter.class)
     @SerializedName("attachments")
     @Expose
-    private List<IssueAttachment> mAttachments = new ArrayList<IssueAttachment>();
+    private List<IssueAttachment> mAttachments;
 
     @ColumnInfo(name = "last_request_time_in_milliseconds")
-    private long last_request_time_in_milliseconds;
+    @Expose (serialize = false)
+    private Long last_request_time_in_milliseconds;
 
+    @Ignore
+    @SerializedName("notes")
+    private String note;
 
-    public long getLast_request_time_in_milliseconds() {
+    public Long getLast_request_time_in_milliseconds() {
         return last_request_time_in_milliseconds;
     }
 
-    public void setLast_request_time_in_milliseconds(long last_request_time_in_milliseconds) {
+    public void setLast_request_time_in_milliseconds(Long last_request_time_in_milliseconds) {
         this.last_request_time_in_milliseconds = last_request_time_in_milliseconds;
     }
 
@@ -241,6 +246,14 @@ public class Issue  {
 
     public void setAttachments(List<IssueAttachment> attachments) {
         mAttachments = attachments;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public Issue() {

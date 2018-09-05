@@ -13,7 +13,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ServiceGenerator {
     //TODO: move to settings, no hardcoding
-    private static String API_BASE_URL = "https://redmine.i-gs.ru/";
+    private static String API_BASE_URL = "http://redmine.igs.local/";
 
     private static  OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 

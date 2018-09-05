@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -20,6 +21,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -36,8 +38,10 @@ import android.widget.Toast;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.IssueDatabase;
 import com.example.diti.redminemobileclient.datasources.IssueRepository;
+import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.datasources.IssueViewModel;
 import com.example.diti.redminemobileclient.datasources.IssueViewModelFactory;
+import com.example.diti.redminemobileclient.fragments.NewCommentDialog;
 import com.example.diti.redminemobileclient.fragments.TaskCommentsFragment;
 import com.example.diti.redminemobileclient.fragments.TaskDetailsFragment;
 import com.example.diti.redminemobileclient.fragments.TaskStopDialog;
@@ -49,16 +53,25 @@ import java.io.File;
 import java.util.List;
 import java.util.Random;
 
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
-public class TaskActivity extends AppCompatActivity implements TaskDetailsFragment.OnFragmentInteractionListener, TaskCommentsFragment.OnListFragmentInteractionListener, TaskStopDialog.OnDialogIterationListener {
+
+public class TaskActivity extends AppCompatActivity
+        implements TaskDetailsFragment.OnFragmentInteractionListener,
+                   TaskCommentsFragment.OnListFragmentInteractionListener,
+                   TaskStopDialog.OnDialogIterationListener,
+                   NewCommentDialog.OnNewCommentDialogInteractionListener {
 
     private static final String TAG                              = "TaskActivity";
     public static final  String EXTRA_ISSUE_ID                   = "issue_id";
     public static final  String EXTRA_TOKEN                      = "token";
     public static final  String IS_TASK_STOPED_FROM_NOTIFICATION = "is_task_stoped_from_notification";
 
-    private static final String CHANNEL_ID       = "CHANNEL_ID_FOR_TASK_EXEC";
-    public static final  String ACTION_STOP      = "ACTION_STOP";
+    private static final String CHANNEL_ID  = "CHANNEL_ID_FOR_TASK_EXEC";
+    public static final  String ACTION_STOP = "ACTION_STOP";
 
 
     private ViewPager                mViewPager;
@@ -67,33 +80,38 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     private IssueViewModel           mIssueViewModel;
     private IssueDatabase            mDatabase;
     private SharedPreferences        sharedPreferences;
-    private ProgressBar mProgressBar;
+    private ProgressBar              mProgressBar;
     private SharedPreferences.Editor editor;
     private Integer                  issueId;
     private Issue                    mIssue;
     String uniqueIdPrefix;
     private int pages = 2;
-    private  boolean                    isStopedFromNotificaton;
+    private boolean                    isStopedFromNotificaton;
     private NotificationCompat.Builder notificationBuilder;
-    private  Notification               notification;
+    private Notification               notification;
+
+    private RedmineRestApiClient.RedmineClient client;
+    private IssueRepository                    repository;
+    private IssueViewModelFactory              factory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task);
-        mProgressBar = (ProgressBar)findViewById(R.id.task_progress);
+        mProgressBar = (ProgressBar) findViewById(R.id.task_progress);
         mProgressBar.setVisibility(View.VISIBLE);
 
         issueId = getIntent().getIntExtra(EXTRA_ISSUE_ID, 0);
         mAuthToken = getIntent().getStringExtra(EXTRA_TOKEN);
-        isStopedFromNotificaton = getIntent().getBooleanExtra(IS_TASK_STOPED_FROM_NOTIFICATION, false);
+        isStopedFromNotificaton = getIntent().getBooleanExtra(IS_TASK_STOPED_FROM_NOTIFICATION,
+                                                              false);
 
         mDatabase = Room.databaseBuilder(getApplicationContext(), IssueDatabase.class, "issue")
-                .fallbackToDestructiveMigration()
-                .build();
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, getCacheDir());
-        IssueRepository repository = new IssueRepository(client, mDatabase.mIssueDao(), this);
-        IssueViewModelFactory factory = new IssueViewModelFactory(repository);
+                        .fallbackToDestructiveMigration()
+                        .build();
+        client = RedmineRestApiClient.getRedmineClient(mAuthToken, getCacheDir());
+        repository = new IssueRepository(client, mDatabase.mIssueDao(), this);
+        factory = new IssueViewModelFactory(repository);
         mIssueViewModel = ViewModelProviders.of(this, factory).get(IssueViewModel.class);
 
         Toolbar topToolbar = findViewById(R.id.task_top_toolbar);
@@ -114,24 +132,10 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
             @Override
             protected void onPostExecute(Void aVoid) {
                 mViewPager.setAdapter(mAdapter);
-                mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-                    @Override
-                    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                    }
-
-                    @Override
-                    public void onPageSelected(int position) {
-                    }
-
-                    @Override
-                    public void onPageScrollStateChanged(int state) {
-
-                    }
-                });
             }
         }.execute(issueId);
 
-        if(isStopedFromNotificaton){
+        if (isStopedFromNotificaton) {
 
             startDialog();
         }
@@ -143,14 +147,14 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.task_top_toolbar_menu, menu);
 
-        if(mIssue != null &&  mIssue.getAttachments().size() != 0){
+        if (mIssue != null && mIssue.getAttachments().size() != 0) {
             Random rand = new Random();
             uniqueIdPrefix = String.valueOf(rand.nextInt(89) + 10);
             List<IssueAttachment> attachmentsList = mIssue.getAttachments();
-            MenuItem item = menu.findItem(R.id.task_attachments);
-            SubMenu attachments = item.getSubMenu();
+            MenuItem              item            = menu.findItem(R.id.task_attachments);
+            SubMenu               attachments     = item.getSubMenu();
             attachments.clear();
-            for(int i = 0; i < attachmentsList.size(); i++){
+            for (int i = 0; i < attachmentsList.size(); i++) {
                 int itemId = Integer.parseInt(uniqueIdPrefix + 1);
                 attachments.add(0, itemId, 0, attachmentsList.get(i).getFilename());
             }
@@ -162,10 +166,13 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.task_start_timer:
-                sharedPreferences = getApplicationContext().getSharedPreferences(getString(R.string.preference_file_key), getApplicationContext().MODE_PRIVATE);
+                sharedPreferences = getApplicationContext().getSharedPreferences(
+                        getString(R.string.preference_file_key),
+                        getApplicationContext().MODE_PRIVATE);
                 editor = sharedPreferences.edit();
                 editor.putInt(getString(R.string.task_id_started_key), issueId);
-                editor.putLong(getString(R.string.task_time_started_key), System.currentTimeMillis());
+                editor.putLong(getString(R.string.task_time_started_key),
+                               System.currentTimeMillis());
                 editor.commit();
                 createNotification(issueId);
                 invalidateOptionsMenu();
@@ -174,25 +181,25 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
                 startDialog();
                 return true;
             default:
-                if(String.valueOf(item.getItemId()).startsWith(String.valueOf(uniqueIdPrefix))){
-                    File file = new File(getCacheDir(), item.getTitle().toString());
-                    Uri uri = FileProvider.getUriForFile(this, "be.myapplication", file);
+                if (String.valueOf(item.getItemId()).startsWith(String.valueOf(uniqueIdPrefix))) {
+                    File   file   = new File(getCacheDir(), item.getTitle().toString());
+                    Uri    uri    = FileProvider.getUriForFile(this, "be.myapplication", file);
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     MimeTypeMap myMime = MimeTypeMap.getSingleton();
-                    String mimeType = myMime.getMimeTypeFromExtension(file.getName().substring(file.getName().lastIndexOf(".") + 1));
+                    String mimeType = myMime.getMimeTypeFromExtension(
+                            file.getName().substring(file.getName().lastIndexOf(".") + 1));
                     intent.setDataAndType(uri, mimeType);
                     try {
                         startActivity(intent);
-                    }catch (ActivityNotFoundException e){
+                    } catch (ActivityNotFoundException e) {
                         Toast.makeText(this, "Для файла не найдено соответствующее приложение",
                                        Toast.LENGTH_LONG).show();
                         e.printStackTrace();
                     }
                     return true;
-                }
-                else{
+                } else {
                     return super.onOptionsItemSelected(item);
                 }
         }
@@ -200,18 +207,22 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
 
     private void createNotification(Integer issueId) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getString(R.string.channel_name);
-            String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            CharSequence        name        = getString(R.string.channel_name);
+            String              description = getString(R.string.channel_description);
+            int                 importance  = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel     = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
-            notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID).setSmallIcon(R.drawable.outline_timer_24)
-                    .setContentTitle("Выполняется задача №" + issueId);
+            notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID).setSmallIcon(
+                    R.drawable.outline_timer_24)
+                                                                                  .setContentTitle(
+                                                                                          "Выполняется задача №" + issueId);
         } else {
-            notificationBuilder = new NotificationCompat.Builder(this).setSmallIcon(R.drawable.outline_timer_24)
-                    .setContentTitle("Выполняется задача №" + issueId);
+            notificationBuilder = new NotificationCompat.Builder(this).setSmallIcon(
+                    R.drawable.outline_timer_24)
+                                                                      .setContentTitle(
+                                                                              "Выполняется задача №" + issueId);
         }
 
         Intent playIntent = new Intent(this, TaskActivity.class);
@@ -219,8 +230,10 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
         playIntent.putExtra(TaskActivity.EXTRA_TOKEN, mAuthToken);
         playIntent.putExtra(TaskActivity.IS_TASK_STOPED_FROM_NOTIFICATION, true);
         playIntent.setAction(ACTION_STOP);
-        PendingIntent pendingPlayIntent = PendingIntent.getActivity(this, 0, playIntent, 0);
-        NotificationCompat.Action playAction = new NotificationCompat.Action(R.drawable.outline_stop_24, "Stop", pendingPlayIntent);
+        PendingIntent pendingPlayIntent = PendingIntent.getActivity(this, 0, playIntent,
+                                                                    0);
+        NotificationCompat.Action playAction = new NotificationCompat.Action(
+                R.drawable.outline_stop_24, "Stop", pendingPlayIntent);
         notificationBuilder.addAction(playAction);
         notificationBuilder.setAutoCancel(true);
 
@@ -229,15 +242,16 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
         notificationManager.notify(000, notification);
     }
 
-    public void startDialog(){
-        TaskStopDialog dialog  = new TaskStopDialog();
+    public void startDialog() {
+        TaskStopDialog dialog = new TaskStopDialog();
         dialog.show(getSupportFragmentManager(), "TaskStopDialog");
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
 
-        sharedPreferences = getApplicationContext().getSharedPreferences(getString(R.string.preference_file_key), getApplicationContext().MODE_PRIVATE);
+        sharedPreferences = getApplicationContext().getSharedPreferences(
+                getString(R.string.preference_file_key), getApplicationContext().MODE_PRIVATE);
         if (sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) == issueId) {
             menu.findItem(R.id.task_start_timer).setVisible(false);
             menu.findItem(R.id.task_stop_timer).setVisible(true);
@@ -252,6 +266,43 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
     public void OnDialogIteration() {
 
         invalidateOptionsMenu();
+    }
+
+    @Override
+    public void addNewComment(String commentText) {
+        Issue         issue         = new Issue();
+        IssueResponse issueResponse = new IssueResponse();
+        issue.setNote(commentText);
+        issueResponse.setIssue(issue);
+
+        Call<ResponseBody> call = client.sendNewComment(String.valueOf(issueId), issueResponse);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    mIssue.setNote(commentText);
+                    new AsyncTask<Void, Void, Void>() {
+                        @Override
+                        protected Void doInBackground(Void... voids) {
+                            mIssueViewModel.update(mIssue.getIssueid());
+                            return null;
+                        }
+
+                        @Override
+                        protected void onPostExecute(Void aVoid) {
+                            mAdapter = new MyFragmentPagerAdapter(getSupportFragmentManager());
+                            mViewPager.setAdapter(mAdapter);
+                            mViewPager.setCurrentItem(1);
+                        }
+                    }.execute();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
     }
 
     private class MyFragmentPagerAdapter extends FragmentPagerAdapter {
@@ -283,6 +334,7 @@ public class TaskActivity extends AppCompatActivity implements TaskDetailsFragme
                 return getString(R.string.task_comments_tab);
             }
         }
+
     }
 
     @Override

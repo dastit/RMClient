@@ -1,6 +1,7 @@
 package com.example.diti.redminemobileclient.retrofit;
 
 import com.example.diti.redminemobileclient.datasources.IssueResponse;
+import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.model.Issues;
 import com.example.diti.redminemobileclient.model.Membership;
 import com.example.diti.redminemobileclient.model.Memberships;
@@ -11,8 +12,10 @@ import java.io.File;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
@@ -52,5 +55,8 @@ public class RedmineRestApiClient {
 
         @GET("projects/{projectId}/memberships.json")
         Call<Memberships> reposForMembership(@Path("projectId") String id);
+
+        @PUT ("/issues/{issueId}.json")
+        Call<ResponseBody> sendNewComment(@Path("issueId") String issueId, @Body IssueResponse issue);
     }
 }

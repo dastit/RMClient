@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity
     private String              authToken;
     private CardView            mFreezedIssue;
 
+    //TODO: ADD CONNECTION CHECK
     private boolean isAuthNeeded = true;
 
     @Override
