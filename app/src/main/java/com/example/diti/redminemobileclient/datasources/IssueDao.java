@@ -1,5 +1,6 @@
 package com.example.diti.redminemobileclient.datasources;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
@@ -15,7 +16,7 @@ public interface IssueDao {
     void save(Issue issue);
 
     @Query("SELECT * FROM issue WHERE issueid = :issueId")
-    Issue load(Integer issueId);
+    LiveData<Issue> load(Integer issueId);
 
     @Update
     int update(Issue issue);

@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -21,6 +22,8 @@ import com.example.diti.redminemobileclient.R;
  * to handle interaction events.
  */
 public class NewCommentDialog extends DialogFragment {
+    public static final String EXTRA_COMMENT_TEXT = "comment_text";
+    private static final int REQUEST_CODE          = 1;
     public EditText comment;
 
     private OnNewCommentDialogInteractionListener mListener;
@@ -43,8 +46,12 @@ public class NewCommentDialog extends DialogFragment {
                                                        public void onClick(DialogInterface dialogInterface,
                                                                            int i) {
                                                            String commentText = comment.getText().toString();
-                                                           mListener.addNewComment //TODO: addreal functionality
-                                                                   (commentText);
+                                                           Intent intent = new Intent();
+                                                           intent.putExtra(EXTRA_COMMENT_TEXT,
+                                                                           commentText);
+                                                           getTargetFragment().onActivityResult
+                                                                   (getTargetRequestCode(),
+                                                                    REQUEST_CODE, intent);
                                                        }
                                                    }).setNegativeButton(R.string.dont_stop_task,
                                                                         null).create();

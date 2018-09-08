@@ -1,12 +1,15 @@
 package com.example.diti.redminemobileclient.fragments;
 
+import android.accounts.AccountManager;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -26,14 +29,25 @@ import android.widget.TextView;
 
 import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
+import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.datasources.IssueViewModel;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.model.IssueJournal;
+import com.example.diti.redminemobileclient.model.IssueJournalUser;
+import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * A fragment representing a list of Items.
@@ -42,20 +56,27 @@ import java.util.List;
  * interface.
  */
 public class TaskCommentsFragment extends Fragment {
-    public static final String TAG = "TaskCommentsFragment";
+    public static final  String     TAG          = "TaskCommentsFragment";
+    private static final int        REQUEST_CODE = 0;
+    private static final DateFormat sdf          = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final String ARGS_AUTHTOKEN      = "auth_token";
 
     private OnListFragmentInteractionListener mListener;
     public  IssueViewModel                    mIssueViewModel;
     private RecyclerView                      recyclerView;
     private FloatingActionButton              mNewCommentButton;
 
+    private String mAuthToken;
+    private String mIssueId;
+
     public TaskCommentsFragment() {
     }
 
 
-    public static TaskCommentsFragment newInstance() {
+    public static TaskCommentsFragment newInstance(String token) {
         TaskCommentsFragment fragment = new TaskCommentsFragment();
         Bundle               args     = new Bundle();
+        args.putString(ARGS_AUTHTOKEN, token);
         fragment.setArguments(args);
         return fragment;
     }
@@ -63,6 +84,7 @@ public class TaskCommentsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mAuthToken = getArguments().getString(ARGS_AUTHTOKEN);
     }
 
     @Override
@@ -79,13 +101,12 @@ public class TaskCommentsFragment extends Fragment {
             @Override
             public void onChanged(@Nullable Issue issue) {
                 if (issue != null) {
+                    mIssueId = String.valueOf(issue.getIssueid());
                     recyclerView.setAdapter(
                             new TaskCommentsFragmentAdapter(issue.getJournals(), mListener, issue));
                 }
             }
         });
-//TODO: add update by button
-
 
         // Set floating button
         mNewCommentButton = (FloatingActionButton) view.findViewById(R.id.add_comment_fab);
@@ -93,6 +114,7 @@ public class TaskCommentsFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 NewCommentDialog dialog = new NewCommentDialog();
+                dialog.setTargetFragment(TaskCommentsFragment.this, REQUEST_CODE);
                 dialog.show(getFragmentManager(), "NewCommentDialog");
             }
         });
@@ -126,6 +148,12 @@ public class TaskCommentsFragment extends Fragment {
             holder.bindItem(mValues.get(position), mIssue);
         }
 
+        public void addItem(IssueJournal journal){
+            mValues.add(journal);
+            notifyItemInserted(getItemCount());
+        }
+
+
         @Override
         public int getItemCount() {
             return mValues.size();
@@ -138,7 +166,6 @@ public class TaskCommentsFragment extends Fragment {
             public final TextView     mDate;
             public final ImageButton  mExpandButton;
             public final ImageButton  mCollapseButton;
-            public       IssueJournal mItem;
 
             public ViewHolder(View view) {
                 super(view);
@@ -253,5 +280,45 @@ public class TaskCommentsFragment extends Fragment {
 
     public interface OnListFragmentInteractionListener {
         void onListFragmentInteraction();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_CODE){
+            String commentText = data.getStringExtra(NewCommentDialog.EXTRA_COMMENT_TEXT);
+
+            Issue    issue         = new Issue();
+            IssueResponse issueResponse = new IssueResponse();
+            issue.setNote(commentText);
+            issueResponse.setIssue(issue);
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient
+                    (mAuthToken, getActivity().getCacheDir());
+
+            Call<ResponseBody> call = client.sendNewComment(mIssueId, issueResponse);
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(@NonNull Call<ResponseBody> call,
+                                       @NonNull Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        //mIssueViewModel.requestNewIssueData(Integer.valueOf(mIssueId));
+                        IssueJournal issueJournal = new IssueJournal();
+                        issueJournal.setNotes(commentText);
+                        AccountManager am = AccountManager.get(getActivity());
+                        IssueJournalUser user = new IssueJournalUser();
+                        user.setId("1");
+                        user.setName(am.getAccounts()[0].name);
+                        issueJournal.setUser(user);
+                        issueJournal.setCreatedOn(sdf.format(new Date()));
+                        ((TaskCommentsFragmentAdapter)recyclerView.getAdapter()).addItem(issueJournal);
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+
+                }
+            });
+
+        }
     }
 }
