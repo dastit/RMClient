@@ -19,7 +19,6 @@ public class ServiceGenerator {
     //TODO: move to settings, no hardcoding
     //private static String API_BASE_URL = "http://redmine.igs.local/";
     //private static String API_BASE_URL = "https://redmine.i-gs.ru/";
-    private static String               API_BASE_URL = "";
     private static OkHttpClient.Builder httpClient   = new OkHttpClient.Builder();
 
     private static Retrofit.Builder builder = new Retrofit.Builder()

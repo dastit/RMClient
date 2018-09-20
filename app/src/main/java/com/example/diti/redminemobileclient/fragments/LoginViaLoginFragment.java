@@ -4,11 +4,11 @@ import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.support.design.widget.TextInputLayout;
 import android.text.TextUtils;
 import android.util.Log;
@@ -75,7 +75,7 @@ public class LoginViaLoginFragment extends Fragment {
         mLoginView = (EditText) v.findViewById(R.id.login);
         mPasswordView = (EditText) v.findViewById(R.id.password);
         mSignInButton = (Button) v.findViewById(R.id.sign_in_button);
-        mSignViaApiKey = (Button)v.findViewById(R.id.login_via_apikey_button);
+        mSignViaApiKey = (Button) v.findViewById(R.id.login_via_apikey_button);
 
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -160,51 +160,57 @@ public class LoginViaLoginFragment extends Fragment {
             editor.putString(getString(R.string.settings_base_url), baseUrl);
             editor.commit();
 
-            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(login,
-                                                                                              password,
-                                                                                              getActivity());
-            Call<Users> call =
-                    client.reposForUser();
-            call.enqueue(new Callback<Users>() {
-                @Override
-                public void onResponse(Call<Users> call, Response<Users> response) {
-                    showProgress(false);
-                    if (response.isSuccessful()) {
+            try {
+                RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
+                        login,
+                        password,
+                        getActivity());
+                Call<Users> call =
+                        client.reposForUser();
+                call.enqueue(new Callback<Users>() {
+                    @Override
+                    public void onResponse(Call<Users> call, Response<Users> response) {
+                        showProgress(false);
+                        if (response.isSuccessful()) {
 
+                            String authToken = null;
+                            authToken = response.body().getUser().getApiKey();
 
-                        String         authToken = null;
-                        authToken = response.body().getUser().getApiKey();
+                            RedmineAccount account = new RedmineAccount(login);
+                            Bundle         result  = new Bundle();
+                            AccountManager am = AccountManager.get(getActivity()
+                                                                           .getApplicationContext());
+                            Bundle userOptions = new Bundle();
+                            userOptions.putString(getString(R.string.AM_BASE_URL), baseUrl);
+                            if (am.addAccountExplicitly(account, authToken, userOptions)) {
+                                result.putString(AccountManager.KEY_ACCOUNT_NAME, login);
+                                result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+                                result.putString(AccountManager.KEY_PASSWORD, authToken);
+                                am.setAuthToken(account, RedmineAccount.TOKEN_FULL_ACCESS,
+                                                authToken);
+                            } else {
+                                result.putString(AccountManager.KEY_ERROR_MESSAGE,
+                                                 getString(R.string.account_already_exists));
+                            }
 
-                        RedmineAccount account   = new RedmineAccount(login);
-                        Bundle         result    = new Bundle();
-                        AccountManager am = AccountManager.get(getActivity()
-                                                                       .getApplicationContext());
-                        Bundle userOptions = new Bundle();
-                        userOptions.putString(getString(R.string.AM_BASE_URL), baseUrl);
-                        if (am.addAccountExplicitly(account, authToken, userOptions)) {
-                            result.putString(AccountManager.KEY_ACCOUNT_NAME, login);
-                            result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
-                            result.putString(AccountManager.KEY_PASSWORD, authToken);
-                            am.setAuthToken(account, RedmineAccount.TOKEN_FULL_ACCESS, authToken);
+                            mListener.onLoginSuccess(result);
                         } else {
-                            result.putString(AccountManager.KEY_ERROR_MESSAGE,
-                                             getString(R.string.account_already_exists));
+                            Toast.makeText(getActivity(), response.message(), Toast.LENGTH_LONG)
+                                 .show();
                         }
-
-                        mListener.onLoginSuccess(result);
-                    } else {
-                        Toast.makeText(getActivity(), response.message(), Toast.LENGTH_LONG)
-                             .show();
                     }
-                }
 
-                @Override
-                public void onFailure(Call<Users> call, Throwable t) {
-                    Log.d(TAG, t.getLocalizedMessage());
-                    showProgress(false);
-                    mListener.onLoginFailedWrongHostName();
-                }
-            });
+                    @Override
+                    public void onFailure(Call<Users> call, Throwable t) {
+                        Log.d(TAG, t.getLocalizedMessage());
+                        showProgress(false);
+                        mListener.onLoginFailedWrongHostName();
+                    }
+                });
+            }catch (NullPointerException e){
+                Log.e(TAG, e.getLocalizedMessage());
+                Toast.makeText(getActivity(), R.string.internal_error, Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -271,8 +277,11 @@ public class LoginViaLoginFragment extends Fragment {
 
     public interface OnLoginViaLoginFragmentInteractionListener {
         void onLoginSuccess(Bundle result);
+
         void openLoginViaApiKeyFragment();
+
         String getBaseUrl();
-        void  onLoginFailedWrongHostName();
+
+        void onLoginFailedWrongHostName();
     }
 }

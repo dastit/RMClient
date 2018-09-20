@@ -303,53 +303,59 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void showFreezedTask(int issueId) {
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient
-                (authToken, this);
-        Call<IssueResponse> call = client.reposForTask(String.valueOf(issueId));
-        call.enqueue(new Callback<IssueResponse>() {
-            @Override
-            public void onResponse(Call<IssueResponse> call, Response<IssueResponse> response) {
-                Issue issue = response.body().getIssue();
-                mFreezedIssue.setVisibility(View.VISIBLE);
-                TextView mTaskSubject      = (TextView) findViewById(R.id.f_task_subject);
-                TextView mTaskCreationDate = (TextView) findViewById(R.id.f_task_date);
-                TextView mTaskProject      = (TextView) findViewById(R.id.f_task_project);
-                TextView mProjectFirstLetterTextView = (TextView) findViewById(
-                        R.id.f_project_letter_text_view);
-                TextView mTaskId = (TextView) findViewById(R.id.f_task_id);
-                ImageButton mStopTimerButton = (ImageButton) findViewById(
-                        R.id.f_stop_timer_button);
+        try {
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient
+                    (authToken, this);
+            Call<IssueResponse> call = client.reposForTask(String.valueOf(issueId));
+            call.enqueue(new Callback<IssueResponse>() {
+                @Override
+                public void onResponse(Call<IssueResponse> call, Response<IssueResponse> response) {
+                    Issue issue = response.body().getIssue();
+                    mFreezedIssue.setVisibility(View.VISIBLE);
+                    TextView mTaskSubject      = (TextView) findViewById(R.id.f_task_subject);
+                    TextView mTaskCreationDate = (TextView) findViewById(R.id.f_task_date);
+                    TextView mTaskProject      = (TextView) findViewById(R.id.f_task_project);
+                    TextView mProjectFirstLetterTextView = (TextView) findViewById(
+                            R.id.f_project_letter_text_view);
+                    TextView mTaskId = (TextView) findViewById(R.id.f_task_id);
+                    ImageButton mStopTimerButton = (ImageButton) findViewById(
+                            R.id.f_stop_timer_button);
 
-                mStopTimerButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        TaskStopDialog dialog = new TaskStopDialog();
-                        dialog.show(getSupportFragmentManager(), "TaskStopDialog");
-                    }
-                });
-                mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
-                mFreezedIssue.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+                    mStopTimerButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            TaskStopDialog dialog = new TaskStopDialog();
+                            dialog.show(getSupportFragmentManager(), "TaskStopDialog");
+                        }
+                    });
+                    mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
+                    mFreezedIssue.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
 
-                        Intent intent = new Intent(MainActivity.this, TaskActivity.class);
-                        intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
-                        intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
-                        startActivity(intent);
-                    }
-                });
-                mTaskId.setText("# " + String.valueOf(issueId));
-                mTaskSubject.setText(issue.getSubject());
-                mTaskProject.setText(issue.getProject().getName());
-                String projectName = issue.getProject().getName().substring(0, 1);
-                mProjectFirstLetterTextView.setText(projectName);
-            }
+                            Intent intent = new Intent(MainActivity.this, TaskActivity.class);
+                            intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
+                            intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
+                            startActivity(intent);
+                        }
+                    });
+                    mTaskId.setText("# " + String.valueOf(issueId));
+                    mTaskSubject.setText(issue.getSubject());
+                    mTaskProject.setText(issue.getProject().getName());
+                    String projectName = issue.getProject().getName().substring(0, 1);
+                    mProjectFirstLetterTextView.setText(projectName);
+                }
 
-            @Override
-            public void onFailure(Call<IssueResponse> call, Throwable t) {
+                @Override
+                public void onFailure(Call<IssueResponse> call, Throwable t) {
 
-            }
-        });
+                }
+            });
+        }catch (NullPointerException e){
+            Log.e(TAG, e.getLocalizedMessage());
+            TextView errorText      = (TextView) findViewById(R.id.f_task_subject);
+            errorText.setText(e.getLocalizedMessage());
+        }
     }
 
     @Override

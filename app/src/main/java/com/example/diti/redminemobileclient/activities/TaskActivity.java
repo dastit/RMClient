@@ -13,7 +13,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -25,6 +24,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -37,7 +37,6 @@ import android.widget.Toast;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.datasources.IssueDatabase;
 import com.example.diti.redminemobileclient.datasources.IssueRepository;
-import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.datasources.IssueViewModel;
 import com.example.diti.redminemobileclient.datasources.IssueViewModelFactory;
 import com.example.diti.redminemobileclient.fragments.NewCommentDialog;
@@ -51,11 +50,6 @@ import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 import java.io.File;
 import java.util.List;
 import java.util.Random;
-
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 
 public class TaskActivity extends AppCompatActivity
@@ -104,49 +98,40 @@ public class TaskActivity extends AppCompatActivity
                                       .fallbackToDestructiveMigration()
                                       .allowMainThreadQueries()
                                       .build();
-        client = RedmineRestApiClient.getRedmineClient(mAuthToken, this);
-        repository = new IssueRepository(client, mDatabase.mIssueDao(), this);
-        mIssueViewModel = ViewModelProviders.of(this, new IssueViewModelFactory(repository))
-                                            .get(IssueViewModel.class);
+        try {
+            client = RedmineRestApiClient.getRedmineClient(mAuthToken, this);
+            repository = new IssueRepository(client, mDatabase.mIssueDao(), this);
+            mIssueViewModel = ViewModelProviders.of(this, new IssueViewModelFactory(repository))
+                                                .get(IssueViewModel.class);
 
-        mViewPager = findViewById(R.id.tasks_pager);
-        mAdapter = new MyFragmentPagerAdapter(getSupportFragmentManager());
-        mViewPager.setAdapter(mAdapter);
+            mViewPager = findViewById(R.id.tasks_pager);
+            mAdapter = new MyFragmentPagerAdapter(getSupportFragmentManager());
+            mViewPager.setAdapter(mAdapter);
 
-
-        Toolbar topToolbar = findViewById(R.id.task_top_toolbar);
-        setSupportActionBar(topToolbar);
-        ActionBar ab = getSupportActionBar();
-        if (ab != null) {
-            ab.setDisplayHomeAsUpEnabled(true);
-        }
-
-        mIssueViewModel.getStoredIssue(issueId);
-        mIssueViewModel.getIssueLiveData().observe(this, new Observer<Issue>() {
-            @Override
-            public void onChanged(@Nullable Issue issue) {
-                if (repository.isExpired(issue)) {
-                    mIssueViewModel.requestNewIssueData(issueId);
-                }
+            Toolbar topToolbar = findViewById(R.id.task_top_toolbar);
+            setSupportActionBar(topToolbar);
+            ActionBar ab = getSupportActionBar();
+            if (ab != null) {
+                ab.setDisplayHomeAsUpEnabled(true);
             }
-        });
 
-        if (isStopedFromNotificaton) {
-            startDialog();
+            mIssueViewModel.getStoredIssue(issueId);
+            mIssueViewModel.getIssueLiveData().observe(this, new Observer<Issue>() {
+                @Override
+                public void onChanged(@Nullable Issue issue) {
+                    if (repository.isExpired(issue)) {
+                        mIssueViewModel.requestNewIssueData(issueId);
+                    }
+                }
+            });
+
+            if (isStopedFromNotificaton) {
+                startDialog();
+            }
+        } catch (NullPointerException e) {
+            Log.e(TAG, e.getLocalizedMessage());
+            Toast.makeText(this, R.string.empty_base_url_error, Toast.LENGTH_LONG).show();
         }
-
-//        new AsyncTask<Integer, Void, Void>() {
-//            @Override
-//            protected Void doInBackground(Integer... ids) {
-//                mIssueViewModel.init(ids[0]);
-//                return null;
-//            }
-//
-//            @Override
-//            protected void onPostExecute(Void aVoid) {
-//                mViewPager.setAdapter(mAdapter);
-//            }
-//        }.execute(issueId);
     }
 
 

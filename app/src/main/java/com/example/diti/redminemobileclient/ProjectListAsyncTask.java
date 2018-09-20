@@ -1,6 +1,5 @@
 package com.example.diti.redminemobileclient;
 
-import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
@@ -21,13 +20,14 @@ import retrofit2.Response;
 public class ProjectListAsyncTask extends AsyncTask<Void, Void, List<Project>> {
     private WeakReference<AppCompatActivity> contextRef;
     private String                           token;
-    private TaskDelegate mDelegate;
+    private TaskDelegate                     mDelegate;
 
     public interface TaskDelegate {
         public void removeProgressBar();
     }
 
-    public ProjectListAsyncTask(AppCompatActivity context, String authToken, TaskDelegate delegate) {
+    public ProjectListAsyncTask(AppCompatActivity context, String authToken,
+                                TaskDelegate delegate) {
         contextRef = new WeakReference<AppCompatActivity>(context);
         token = authToken;
         mDelegate = delegate;
@@ -35,13 +35,16 @@ public class ProjectListAsyncTask extends AsyncTask<Void, Void, List<Project>> {
 
     protected List<Project> doInBackground(Void... voids) {
         List<Project> projectList = new ArrayList<>();
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token, contextRef.get());
-        Call<Projects> call = client.reposForProjects(0, 25, "name");
         try {
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token,
+                                                                                              contextRef
+                                                                                                      .get());
+            Call<Projects>                     call   = client.reposForProjects(0, 25, "name");
+
             Response<Projects> response = call.execute();
             projectList = response.body().getProjects();
-            int offset = 25;
-            int limit = 25;
+            int offset     = 25;
+            int limit      = 25;
             int totalCount = response.body().getTotalCount();
             //TODO: DO NOT DELETE COMMENTED - commented for debug
 //            while (offset+limit <= totalCount){
@@ -63,5 +66,4 @@ public class ProjectListAsyncTask extends AsyncTask<Void, Void, List<Project>> {
         dialog.show(contextRef.get().getSupportFragmentManager(), "ProjectListDialog", projects);
         mDelegate.removeProgressBar();
     }
-
 }

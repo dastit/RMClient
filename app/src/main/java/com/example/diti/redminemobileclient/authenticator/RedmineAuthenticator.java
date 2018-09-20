@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.activities.LoginActivity;
@@ -23,6 +24,7 @@ import retrofit2.Response;
 
 
 public class RedmineAuthenticator extends AbstractAccountAuthenticator {
+    private final static String TAG = "RedmineAuthenticator";
     Context mContext;
 
     public RedmineAuthenticator(Context context) {
@@ -73,11 +75,12 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
                     (account, mContext.getString(R.string.AM_BASE_URL)));
             editor.commit();
 
-            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
-                    am.getPassword(account), mContext);
-            Call<Users> call =
-                    client.reposForUser();
             try {
+                RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
+                        am.getPassword(account), mContext);
+                Call<Users> call =
+                        client.reposForUser();
+
                 Response<Users> execute = call.execute();
                 if (execute.isSuccessful()) {
                     authToken = execute.body().getUser().getApiKey();
@@ -92,9 +95,10 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
                     result.putParcelable(AccountManager.KEY_INTENT, intent);
                     result.putString(AccountManager.KEY_ERROR_MESSAGE, "Ошибка авторизации");
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                result.putString(AccountManager.KEY_ERROR_MESSAGE, "Не удалось получить токен");
+            } catch (IOException | NullPointerException e) {
+                Log.e(TAG, e.getLocalizedMessage());
+                result.putString(AccountManager.KEY_ERROR_MESSAGE, "Не удалось получить токен. " +
+                        ""+e.getLocalizedMessage());
             }
         }
 

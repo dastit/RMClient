@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
@@ -291,34 +292,42 @@ public class TaskCommentsFragment extends Fragment {
             IssueResponse issueResponse = new IssueResponse();
             issue.setNote(commentText);
             issueResponse.setIssue(issue);
-            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient
-                    (mAuthToken, getActivity());
+            try {
 
-            Call<ResponseBody> call = client.sendNewComment(mIssueId, issueResponse);
-            call.enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(@NonNull Call<ResponseBody> call,
-                                       @NonNull Response<ResponseBody> response) {
-                    if (response.isSuccessful()) {
-                        //mIssueViewModel.requestNewIssueData(Integer.valueOf(mIssueId));
-                        IssueJournal issueJournal = new IssueJournal();
-                        issueJournal.setNotes(commentText);
-                        AccountManager am = AccountManager.get(getActivity());
-                        IssueJournalUser user = new IssueJournalUser();
-                        user.setId("1");
-                        user.setName(am.getAccounts()[0].name);
-                        issueJournal.setUser(user);
-                        issueJournal.setCreatedOn(sdf.format(new Date()));
-                        ((TaskCommentsFragmentAdapter)recyclerView.getAdapter()).addItem(issueJournal);
+                RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient
+                        (mAuthToken, getActivity());
+
+                Call<ResponseBody> call = client.sendNewComment(mIssueId, issueResponse);
+                call.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(@NonNull Call<ResponseBody> call,
+                                           @NonNull Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            //mIssueViewModel.requestNewIssueData(Integer.valueOf(mIssueId));
+                            IssueJournal issueJournal = new IssueJournal();
+                            issueJournal.setNotes(commentText);
+                            AccountManager   am   = AccountManager.get(getActivity());
+                            IssueJournalUser user = new IssueJournalUser();
+                            user.setId("1");
+                            user.setName(am.getAccounts()[0].name);
+                            issueJournal.setUser(user);
+                            issueJournal.setCreatedOn(sdf.format(new Date()));
+                            ((TaskCommentsFragmentAdapter) recyclerView.getAdapter()).addItem(
+                                    issueJournal);
+                        }
                     }
-                }
 
-                @Override
-                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-
-                }
-            });
-
+                    @Override
+                    public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                        Log.e(TAG, t.getLocalizedMessage());
+                        Toast.makeText(getActivity(), R.string.error_send_new_comment, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+            catch (NullPointerException e){
+                Log.e(TAG, e.getLocalizedMessage());
+                Toast.makeText(getActivity(), R.string.error_send_new_comment, Toast.LENGTH_LONG).show();
+            }
         }
     }
 }

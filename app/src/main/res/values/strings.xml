@@ -88,6 +88,7 @@
     <string name="AM_BASE_URL">accoun_manager_base_url</string>
     <string name="error_empty_APIKEY">Введите API key</string>
     <string name="error_wrong_host_name">Неправильное имя сервера</string>
+    <string name="error_send_new_comment">Новый комментарий не отправлен. Проверьте настройки подключения или перезагрузите приложение.</string>
 
 
     <string-array name="issue_priorities">

@@ -1,6 +1,5 @@
 package com.example.diti.redminemobileclient;
 
-import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
@@ -36,11 +35,12 @@ public class ParentIssueAsyncTask extends AsyncTask<Void, Void, List<Issue>> {
 
     protected List<Issue> doInBackground(Void... voids) {
         List<Issue> issues = new ArrayList<>();
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token,
-                                                                                          contextRef
-                                                                                                  .get());
-        Call<Issues> call = client.reposForTasksInProject(projectId, 0, 25, "name");
         try {
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token,
+                                                                                              contextRef
+                                                                                                      .get());
+            Call<Issues> call = client.reposForTasksInProject(projectId, 0, 25, "name");
+
             Response<Issues> response = call.execute();
             issues = response.body().getIssues();
 

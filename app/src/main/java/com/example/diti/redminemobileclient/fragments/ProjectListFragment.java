@@ -12,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +30,7 @@ import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 public class ProjectListFragment extends Fragment {
 
     private static final String ARG_TOKEN = "token";
+    private static final String TAG          = "ProjectListFragment";
     private OnListFragmentInteractionListener mListener;
 
     private     String                           mAuthToken;
@@ -57,10 +59,18 @@ public class ProjectListFragment extends Fragment {
         if (getArguments() != null) {
             mAuthToken = getArguments().getString(ARG_TOKEN);
         }
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, getActivity());
-        PagedProjectListRepository mPagedProjectListRepository = new PagedProjectListRepository(client);
-        PagedProjectListViewModelFactory factory = new PagedProjectListViewModelFactory(mPagedProjectListRepository);
-        viewModel = ViewModelProviders.of(this, factory).get(PagedProjectListViewModel.class);
+        try {
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
+                    mAuthToken, getActivity());
+            PagedProjectListRepository mPagedProjectListRepository = new PagedProjectListRepository(
+                    client);
+            PagedProjectListViewModelFactory factory = new PagedProjectListViewModelFactory(
+                    mPagedProjectListRepository);
+            viewModel = ViewModelProviders.of(this, factory).get(PagedProjectListViewModel.class);
+        }catch (NullPointerException e){
+            Log.d(TAG, e.getLocalizedMessage());
+            //TODO: make field for error
+        }
     }
 
     @Override
