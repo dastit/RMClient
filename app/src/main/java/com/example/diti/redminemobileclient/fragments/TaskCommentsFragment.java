@@ -292,7 +292,7 @@ public class TaskCommentsFragment extends Fragment {
             issue.setNote(commentText);
             issueResponse.setIssue(issue);
             RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient
-                    (mAuthToken, getActivity().getCacheDir());
+                    (mAuthToken, getActivity());
 
             Call<ResponseBody> call = client.sendNewComment(mIssueId, issueResponse);
             call.enqueue(new Callback<ResponseBody>() {

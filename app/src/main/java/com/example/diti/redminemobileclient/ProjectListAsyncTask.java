@@ -35,7 +35,7 @@ public class ProjectListAsyncTask extends AsyncTask<Void, Void, List<Project>> {
 
     protected List<Project> doInBackground(Void... voids) {
         List<Project> projectList = new ArrayList<>();
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token, contextRef.get().getCacheDir());
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token, contextRef.get());
         Call<Projects> call = client.reposForProjects(0, 25, "name");
         try {
             Response<Projects> response = call.execute();

@@ -5,6 +5,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -116,6 +117,7 @@ public class LoginViaLoginFragment extends Fragment {
     }
 
     private void attemptLoginViaLoginPassword() {
+        String baseUrl = mListener.getBaseUrl();
 
         // Reset errors.
         mLoginView.setError(null);
@@ -151,10 +153,16 @@ public class LoginViaLoginFragment extends Fragment {
         } else {
             showProgress(true);
 
+            //adding url into sharedpreferences
+            SharedPreferences sharedPreferences = getActivity().getSharedPreferences
+                    (getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(getString(R.string.settings_base_url), baseUrl);
+            editor.commit();
+
             RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(login,
                                                                                               password,
-                                                                                              getActivity()
-                                                                                                      .getCacheDir());
+                                                                                              getActivity());
             Call<Users> call =
                     client.reposForUser();
             call.enqueue(new Callback<Users>() {
@@ -162,12 +170,18 @@ public class LoginViaLoginFragment extends Fragment {
                 public void onResponse(Call<Users> call, Response<Users> response) {
                     showProgress(false);
                     if (response.isSuccessful()) {
-                        String         authToken = response.body().getUser().getApiKey();
+
+
+                        String         authToken = null;
+                        authToken = response.body().getUser().getApiKey();
+
                         RedmineAccount account   = new RedmineAccount(login);
                         Bundle         result    = new Bundle();
                         AccountManager am = AccountManager.get(getActivity()
                                                                        .getApplicationContext());
-                        if (am.addAccountExplicitly(account, authToken, new Bundle())) {
+                        Bundle userOptions = new Bundle();
+                        userOptions.putString(getString(R.string.AM_BASE_URL), baseUrl);
+                        if (am.addAccountExplicitly(account, authToken, userOptions)) {
                             result.putString(AccountManager.KEY_ACCOUNT_NAME, login);
                             result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
                             result.putString(AccountManager.KEY_PASSWORD, authToken);
@@ -187,6 +201,8 @@ public class LoginViaLoginFragment extends Fragment {
                 @Override
                 public void onFailure(Call<Users> call, Throwable t) {
                     Log.d(TAG, t.getLocalizedMessage());
+                    showProgress(false);
+                    mListener.onLoginFailedWrongHostName();
                 }
             });
         }
@@ -256,5 +272,7 @@ public class LoginViaLoginFragment extends Fragment {
     public interface OnLoginViaLoginFragmentInteractionListener {
         void onLoginSuccess(Bundle result);
         void openLoginViaApiKeyFragment();
+        String getBaseUrl();
+        void  onLoginFailedWrongHostName();
     }
 }

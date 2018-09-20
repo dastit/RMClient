@@ -22,9 +22,9 @@ import retrofit2.Response;
 
 public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, ArrayList<Membership>> {
     private WeakReference<AppCompatActivity> contextRef;
-    private String token;
-    private TaskDelegate mDelegate;
-    private String projectId;
+    private String                           token;
+    private TaskDelegate                     mDelegate;
+    private String                           projectId;
 
     public interface TaskDelegate {
         void saveMembersList(ArrayList<Membership> memberships);
@@ -42,8 +42,7 @@ public class GetMembershipUsersAsyncTask extends AsyncTask<Void, Void, ArrayList
         ArrayList<Membership> userMembershipList = new ArrayList<>();
         RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token,
                                                                                           contextRef
-                                                                                                  .get()
-                                                                                                  .getCacheDir());
+                                                                                                  .get());
         Call<Memberships> call = client.reposForMembership(projectId);
         try {
             Response<Memberships> response = call.execute();

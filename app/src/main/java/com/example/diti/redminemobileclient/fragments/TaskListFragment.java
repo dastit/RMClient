@@ -69,6 +69,7 @@ public class TaskListFragment extends Fragment {
     private SharedPreferences                 mSharedPreferences;
     private FloatingActionButton              mCreateNewTaskButton;
     private SharedPreferences.Editor          mEditor;
+    private TextView mErrorText;
 
     public TaskListFragment() {
     }
@@ -95,10 +96,9 @@ public class TaskListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tasklist_list, container, false);
-
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
-                mAuthToken, getActivity()
-                        .getCacheDir());
+        try {
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
+                    mAuthToken, getActivity());
         repository = new PagedTaskListRepository(client);
         PagedTasksListViewModelFactory factory = new PagedTasksListViewModelFactory(repository);
         viewModel = ViewModelProviders.of(this, factory).get(PagedTasksListViewModel.class);
@@ -131,8 +131,8 @@ public class TaskListFragment extends Fragment {
         final SwipeController swipeController = new SwipeController(new SwipeControllerActions() {
             @Override
             public void onRightClicked(int position) {
-                Issue             mIssue            = mAdapter.getItemClicked(position);
-                Context           context           = getActivity().getApplicationContext();
+                Issue   mIssue  = mAdapter.getItemClicked(position);
+                Context context = getActivity().getApplicationContext();
                 SharedPreferences sharedPreferences = context.getSharedPreferences(
                         getString(R.string.preference_file_key), context.MODE_PRIVATE);
                 if (sharedPreferences.contains(getString(R.string.task_id_started_key)) &&
@@ -177,7 +177,12 @@ public class TaskListFragment extends Fragment {
                 startActivity(intent);
             }
         });
-
+        }catch (NullPointerException e){
+            mListener.setProgressBar();
+            mErrorText = view.findViewById(R.id.error_text);
+            mErrorText.setVisibility(View.VISIBLE);
+            mErrorText.setText(R.string.empty_base_url_error);
+        }
         return view;
     }
 
@@ -214,9 +219,9 @@ public class TaskListFragment extends Fragment {
         playIntent.putExtra(TaskActivity.EXTRA_TOKEN, mAuthToken);
         playIntent.putExtra(TaskActivity.IS_TASK_STOPED_FROM_NOTIFICATION, true);
         playIntent.setAction(ACTION_STOP);
-        PendingIntent             pendingPlayIntent = PendingIntent.getActivity(getActivity(), 0,
-                                                                                playIntent, 0);
-        NotificationCompat.Action playAction        = new NotificationCompat.Action(
+        PendingIntent pendingPlayIntent = PendingIntent.getActivity(getActivity(), 0,
+                                                                    playIntent, 0);
+        NotificationCompat.Action playAction = new NotificationCompat.Action(
                 R.drawable.outline_stop_24, "Stop", pendingPlayIntent);
         notificationBuilder.addAction(playAction);
         notificationBuilder.setAutoCancel(true);

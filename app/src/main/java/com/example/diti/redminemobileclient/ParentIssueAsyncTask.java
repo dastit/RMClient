@@ -38,8 +38,7 @@ public class ParentIssueAsyncTask extends AsyncTask<Void, Void, List<Issue>> {
         List<Issue> issues = new ArrayList<>();
         RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(token,
                                                                                           contextRef
-                                                                                                  .get()
-                                                                                                  .getCacheDir());
+                                                                                                  .get());
         Call<Issues> call = client.reposForTasksInProject(projectId, 0, 25, "name");
         try {
             Response<Issues> response = call.execute();

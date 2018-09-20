@@ -7,9 +7,11 @@ import android.accounts.AccountManager;
 import android.accounts.NetworkErrorException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.activities.LoginActivity;
 import com.example.diti.redminemobileclient.model.Users;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
@@ -22,6 +24,7 @@ import retrofit2.Response;
 
 public class RedmineAuthenticator extends AbstractAccountAuthenticator {
     Context mContext;
+
     public RedmineAuthenticator(Context context) {
         super(context);
         mContext = context;
@@ -33,7 +36,9 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
     }
 
     @Override
-    public Bundle addAccount(AccountAuthenticatorResponse response, String accountType, String authTokenType, String[] requiredFeatures, Bundle options) throws NetworkErrorException {
+    public Bundle addAccount(AccountAuthenticatorResponse response, String accountType,
+                             String authTokenType, String[] requiredFeatures,
+                             Bundle options) throws NetworkErrorException {
         final Intent intent = new Intent(mContext, LoginActivity.class);
         intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, accountType);
         intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
@@ -43,32 +48,44 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
     }
 
     @Override
-    public Bundle confirmCredentials(AccountAuthenticatorResponse response, Account account, Bundle options) throws NetworkErrorException {
+    public Bundle confirmCredentials(AccountAuthenticatorResponse response, Account account,
+                                     Bundle options) throws NetworkErrorException {
         return null;
     }
 
     @Override
-    public Bundle getAuthToken(final AccountAuthenticatorResponse response, final Account account, String authTokenType, Bundle options) throws NetworkErrorException {
+    public Bundle getAuthToken(final AccountAuthenticatorResponse response, final Account account,
+                               String authTokenType, Bundle options) throws NetworkErrorException {
         final AccountManager am = AccountManager.get(mContext);
 
         //String authToken = am.peekAuthToken(account, authTokenType);
-        String authToken = am.getPassword(account);
-        final Bundle result = new Bundle();
+        String       authToken = am.getPassword(account);
+        final Bundle result    = new Bundle();
 
         //если токен не закэшировался при создании аккаунта - запрашиваем токен опять по логину паролю
-        if(TextUtils.isEmpty(authToken)){
-            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(am.getPassword(account), mContext.getCacheDir());
+        if (TextUtils.isEmpty(authToken)) {
+            SharedPreferences sharedPreferences = mContext.getSharedPreferences(mContext
+                                                                                        .getString(
+                                                                                                R.string.preference_file_key),
+                                                                                Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(mContext.getString(R.string.settings_base_url), am.getUserData
+                    (account, mContext.getString(R.string.AM_BASE_URL)));
+            editor.commit();
+
+            RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
+                    am.getPassword(account), mContext);
             Call<Users> call =
                     client.reposForUser();
             try {
                 Response<Users> execute = call.execute();
-                if(execute.isSuccessful()){
+                if (execute.isSuccessful()) {
                     authToken = execute.body().getUser().getApiKey();
                     result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
                     result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
                     result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
                     am.setAuthToken(account, account.type, authToken);
-                }else{
+                } else {
                     final Intent intent = new Intent(mContext, LoginActivity.class);
                     intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
                     intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
@@ -79,7 +96,6 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
                 e.printStackTrace();
                 result.putString(AccountManager.KEY_ERROR_MESSAGE, "Не удалось получить токен");
             }
-
         }
 
         //Фантастика, токен закешировался, возвращаем его
@@ -98,12 +114,15 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
     }
 
     @Override
-    public Bundle updateCredentials(AccountAuthenticatorResponse response, Account account, String authTokenType, Bundle options) throws NetworkErrorException {
+    public Bundle updateCredentials(AccountAuthenticatorResponse response, Account account,
+                                    String authTokenType,
+                                    Bundle options) throws NetworkErrorException {
         return null;
     }
 
     @Override
-    public Bundle hasFeatures(AccountAuthenticatorResponse response, Account account, String[] features) throws NetworkErrorException {
+    public Bundle hasFeatures(AccountAuthenticatorResponse response, Account account,
+                              String[] features) throws NetworkErrorException {
         return null;
     }
 }

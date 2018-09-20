@@ -33,9 +33,6 @@ import android.widget.Toast;
 import com.example.diti.redminemobileclient.DateConverter;
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.authenticator.RedmineAccount;
-import com.example.diti.redminemobileclient.authenticator.RedmineAuthenticator;
-import com.example.diti.redminemobileclient.authenticator.RedmineAuthenticatorService;
-import com.example.diti.redminemobileclient.datasources.IssueRepository;
 import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.fragments.AccountListFragment;
 import com.example.diti.redminemobileclient.fragments.ProjectListFragment;
@@ -103,7 +100,8 @@ public class MainActivity extends AppCompatActivity
             }
             //если аккаунт один - автоматический вход в систему
             else if (accNum == 1) {
-                getToken(mAccountManager.getAccounts()[0]);
+                Account account = mAccountManager.getAccounts()[0];
+                getToken(account);
             }
             //если аккаунтов много - предлагаем выбрать аккаунт
             else {
@@ -116,7 +114,7 @@ public class MainActivity extends AppCompatActivity
                 mAccountListFragment = AccountListFragment.newInstance(names);
                 mAccountListFragment.show(getSupportFragmentManager(), "AccountListFragment");
             }
-        }else{
+        } else {
             initCentralFragment(authToken);
         }
     }
@@ -166,6 +164,7 @@ public class MainActivity extends AppCompatActivity
                                    }, null);
     }
 
+//TODO: add  authtoken, username and url in sharedpreferences
 
     public void getToken(final Account account) {
 
@@ -189,6 +188,18 @@ public class MainActivity extends AppCompatActivity
                                                                                      authToken);
                                                  Log.d(TAG, "Token invalidated");
                                                  if (future.isDone() && !future.isCancelled()) {
+                                                     String baseUrl = mAccountManager.getUserData
+                                                             (account,
+                                                              getString(R.string.AM_BASE_URL));
+                                                     SharedPreferences sharedPreferences =
+                                                             getSharedPreferences(getString(R
+                                                                                                    .string.preference_file_key),
+                                                                                  MODE_PRIVATE);
+                                                     SharedPreferences.Editor editor =
+                                                             sharedPreferences.edit();
+                                                     editor.putString(getString(R.string
+                                                                                        .settings_base_url), baseUrl);
+                                                     editor.apply();
                                                      initCentralFragment(authToken);
                                                  }
                                              } catch (OperationCanceledException | IOException | AuthenticatorException e) {
@@ -267,9 +278,10 @@ public class MainActivity extends AppCompatActivity
                 }
                 SharedPreferences sharedPreferences = getSharedPreferences(
                         getString(R.string.preference_file_key), MODE_PRIVATE);
-                if(sharedPreferences.contains(getString(R.string.task_id_started_key))){
+                if (sharedPreferences.contains(getString(R.string.task_id_started_key))) {
                     showFreezedTask(sharedPreferences.getInt(getString(R.string
-                                                                               .task_id_started_key), 0));
+                                                                               .task_id_started_key),
+                                                             0));
                 }
             } catch (IllegalStateException e) {
                 Toast.makeText(this, "Не удалось загрузить данные, пожалуйста, перезапустите " +
@@ -292,7 +304,7 @@ public class MainActivity extends AppCompatActivity
 
     public void showFreezedTask(int issueId) {
         RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient
-                (authToken, getCacheDir());
+                (authToken, this);
         Call<IssueResponse> call = client.reposForTask(String.valueOf(issueId));
         call.enqueue(new Callback<IssueResponse>() {
             @Override
@@ -320,7 +332,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(View v) {
 
-                        Intent  intent  = new Intent(MainActivity.this, TaskActivity.class);
+                        Intent intent = new Intent(MainActivity.this, TaskActivity.class);
                         intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
                         intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
                         startActivity(intent);
@@ -338,7 +350,6 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
-
     }
 
     @Override

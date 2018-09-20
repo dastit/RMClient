@@ -1,5 +1,7 @@
 package com.example.diti.redminemobileclient.retrofit;
 
+import android.content.Context;
+
 import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.model.Issues;
@@ -22,12 +24,13 @@ import retrofit2.http.Url;
 
 public class RedmineRestApiClient {
 
-    public static RedmineClient getRedmineClient(String login, String password, File cachePath) {
-        return ServiceGenerator.createService(RedmineClient.class, login, password, cachePath);
+    public static RedmineClient getRedmineClient(String login, String password, Context context)
+            throws NullPointerException{
+        return ServiceGenerator.createService(RedmineClient.class, login, password, context);
     }
 
-    public static RedmineClient getRedmineClient(String authToken, File cachePath) {
-        return ServiceGenerator.createService(RedmineClient.class, authToken, cachePath);
+    public static RedmineClient getRedmineClient(String authToken, Context context) throws NullPointerException{
+        return ServiceGenerator.createService(RedmineClient.class, authToken, context);
     }
 
     public interface RedmineClient {

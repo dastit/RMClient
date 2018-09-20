@@ -104,7 +104,7 @@ public class TaskActivity extends AppCompatActivity
                                       .fallbackToDestructiveMigration()
                                       .allowMainThreadQueries()
                                       .build();
-        client = RedmineRestApiClient.getRedmineClient(mAuthToken, getCacheDir());
+        client = RedmineRestApiClient.getRedmineClient(mAuthToken, this);
         repository = new IssueRepository(client, mDatabase.mIssueDao(), this);
         mIssueViewModel = ViewModelProviders.of(this, new IssueViewModelFactory(repository))
                                             .get(IssueViewModel.class);

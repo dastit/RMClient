@@ -57,7 +57,7 @@ public class ProjectListFragment extends Fragment {
         if (getArguments() != null) {
             mAuthToken = getArguments().getString(ARG_TOKEN);
         }
-        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, getActivity().getCacheDir());
+        RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(mAuthToken, getActivity());
         PagedProjectListRepository mPagedProjectListRepository = new PagedProjectListRepository(client);
         PagedProjectListViewModelFactory factory = new PagedProjectListViewModelFactory(mPagedProjectListRepository);
         viewModel = ViewModelProviders.of(this, factory).get(PagedProjectListViewModel.class);
