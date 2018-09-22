@@ -309,7 +309,7 @@ public class TaskCommentsFragment extends Fragment {
                             AccountManager   am   = AccountManager.get(getActivity());
                             IssueJournalUser user = new IssueJournalUser();
                             user.setId("1");
-                            user.setName(am.getAccounts()[0].name);
+                            user.setName("я");
                             issueJournal.setUser(user);
                             issueJournal.setCreatedOn(sdf.format(new Date()));
                             ((TaskCommentsFragmentAdapter) recyclerView.getAdapter()).addItem(

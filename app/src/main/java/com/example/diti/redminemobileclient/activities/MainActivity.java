@@ -7,8 +7,11 @@ import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.arch.lifecycle.Lifecycle;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -35,6 +38,7 @@ import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.authenticator.RedmineAccount;
 import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.fragments.AccountListFragment;
+import com.example.diti.redminemobileclient.fragments.NoConnectionDialog;
 import com.example.diti.redminemobileclient.fragments.ProjectListFragment;
 import com.example.diti.redminemobileclient.fragments.TaskListFragment;
 import com.example.diti.redminemobileclient.fragments.TaskStopDialog;
@@ -57,32 +61,28 @@ public class MainActivity extends AppCompatActivity
     private static final String PROJECT_LIST_FRAGMENT_TAG = "projectList";
     public static final  String TASK_LIST_FRAGMENT_TAG    = "taskList";
 
-    private AccountManager      mAccountManager;
-    private AccountListFragment mAccountListFragment;
-    private DrawerLayout        mDrawerLayout;
-    private ProgressBar         mProgressView;
-    private Toolbar             topToolbar;
-    private ActionBar           ab;
-    private String              authToken;
-    private CardView            mFreezedIssue;
+    private AccountManager mAccountManager;
+    private DrawerLayout   mDrawerLayout;
+    private ProgressBar    mProgressView;
+    private String         authToken;
+    private CardView       mFreezedIssue;
 
-    //TODO: ADD CONNECTION CHECK
     private boolean isAuthNeeded = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initToolbars(savedInstanceState);
+        initToolbars();
         mProgressView = findViewById(R.id.central_fragment_progress);
-        mFreezedIssue = (CardView) findViewById(R.id.freezed_issue);
+        mFreezedIssue = findViewById(R.id.freezed_issue);
 
         if (savedInstanceState != null) {
             Log.d(TAG, "Restore state");
             authToken = savedInstanceState.getString(STATE_AUTH_TOKEN);
             if (authToken != null) {
                 isAuthNeeded = false;
-                initCentralFragment(authToken);
+                //initCentralFragment(authToken);
             }
         }
     }
@@ -90,32 +90,42 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        if (isAuthNeeded) {
-            mProgressView.setVisibility(View.VISIBLE);
-            mAccountManager = AccountManager.get(this);
-            int accNum = mAccountManager.getAccounts().length;
-            //если это первый вход в систему - предлагаем залогиниться
-            if (accNum == 0) {
-                addNewAccount();
-            }
-            //если аккаунт один - автоматический вход в систему
-            else if (accNum == 1) {
-                Account account = mAccountManager.getAccounts()[0];
-                getToken(account);
-            }
-            //если аккаунтов много - предлагаем выбрать аккаунт
-            else {
-                CharSequence[] names = new CharSequence[mAccountManager.getAccounts().length];
-                int            i     = 0;
-                for (Account account : mAccountManager.getAccounts()) {
-                    names[i] = account.name;
-                    i++;
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork != null && activeNetwork.isConnectedOrConnecting()) {
+            if (isAuthNeeded) {
+                mProgressView.setVisibility(View.VISIBLE);
+                mAccountManager = AccountManager.get(this);
+                int accNum = mAccountManager.getAccounts().length;
+                //если это первый вход в систему - предлагаем залогиниться
+                if (accNum == 0) {
+                    addNewAccount();
                 }
-                mAccountListFragment = AccountListFragment.newInstance(names);
-                mAccountListFragment.show(getSupportFragmentManager(), "AccountListFragment");
+                //если аккаунт один - автоматический вход в систему
+                else if (accNum == 1) {
+                    Account account = mAccountManager.getAccounts()[0];
+                    getToken(account);
+                }
+                //если аккаунтов много - предлагаем выбрать аккаунт
+                else {
+                    CharSequence[] names = new CharSequence[mAccountManager.getAccounts().length];
+                    int            i     = 0;
+                    for (Account account : mAccountManager.getAccounts()) {
+                        names[i] = account.name;
+                        i++;
+                    }
+                    AccountListFragment mAccountListFragment = AccountListFragment.newInstance(
+                            names);
+                    mAccountListFragment.show(getSupportFragmentManager(), "AccountListFragment");
+                }
+            } else {
+                initCentralFragment(authToken);
             }
         } else {
-            initCentralFragment(authToken);
+            NoConnectionDialog dialog = new NoConnectionDialog();
+            dialog.show(getFragmentManager(), "NoConnectionDialog");
         }
     }
 
@@ -164,8 +174,6 @@ public class MainActivity extends AppCompatActivity
                                    }, null);
     }
 
-//TODO: add  authtoken, username and url in sharedpreferences
-
     public void getToken(final Account account) {
 
         mAccountManager.getAuthToken(account, RedmineAccount.TOKEN_FULL_ACCESS, new Bundle(), true,
@@ -198,7 +206,8 @@ public class MainActivity extends AppCompatActivity
                                                      SharedPreferences.Editor editor =
                                                              sharedPreferences.edit();
                                                      editor.putString(getString(R.string
-                                                                                        .settings_base_url), baseUrl);
+                                                                                        .settings_base_url),
+                                                                      baseUrl);
                                                      editor.apply();
                                                      initCentralFragment(authToken);
                                                  }
@@ -214,17 +223,18 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void initToolbars(final Bundle savedInstanceState) {
-        topToolbar = findViewById(R.id.top_toolbar);
+    private void initToolbars() {
+        Toolbar topToolbar = findViewById(R.id.top_toolbar);
         setSupportActionBar(topToolbar);
-        ab = getSupportActionBar();
-        ab.setDisplayHomeAsUpEnabled(true);
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+            ab.setHomeAsUpIndicator(R.drawable.outline_menu_24);
+        }
         mDrawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
-        ab.setHomeAsUpIndicator(R.drawable.outline_menu_24);
 
-        BottomNavigationView bottomNavigationView = (BottomNavigationView)
-                findViewById(R.id.navigation);
+        BottomNavigationView bottomNavigationView = findViewById(R.id.navigation);
 
         bottomNavigationView.setOnNavigationItemSelectedListener(
                 new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -309,51 +319,55 @@ public class MainActivity extends AppCompatActivity
             Call<IssueResponse> call = client.reposForTask(String.valueOf(issueId));
             call.enqueue(new Callback<IssueResponse>() {
                 @Override
-                public void onResponse(Call<IssueResponse> call, Response<IssueResponse> response) {
-                    Issue issue = response.body().getIssue();
-                    mFreezedIssue.setVisibility(View.VISIBLE);
-                    TextView mTaskSubject      = (TextView) findViewById(R.id.f_task_subject);
-                    TextView mTaskCreationDate = (TextView) findViewById(R.id.f_task_date);
-                    TextView mTaskProject      = (TextView) findViewById(R.id.f_task_project);
-                    TextView mProjectFirstLetterTextView = (TextView) findViewById(
-                            R.id.f_project_letter_text_view);
-                    TextView mTaskId = (TextView) findViewById(R.id.f_task_id);
-                    ImageButton mStopTimerButton = (ImageButton) findViewById(
-                            R.id.f_stop_timer_button);
+                public void onResponse(@NonNull Call<IssueResponse> call,
+                                       @NonNull Response<IssueResponse> response) {
+                    if (response.isSuccessful() && response.body()!=null && response.body()
+                                                                                   .getIssue()!=null) {
+                        Issue issue = response.body().getIssue();
+                        mFreezedIssue.setVisibility(View.VISIBLE);
+                        TextView mTaskSubject      = findViewById(R.id.f_task_subject);
+                        TextView mTaskCreationDate = findViewById(R.id.f_task_date);
+                        TextView mTaskProject      = findViewById(R.id.f_task_project);
+                        TextView mProjectFirstLetterTextView = findViewById(
+                                R.id.f_project_letter_text_view);
+                        TextView mTaskId = findViewById(R.id.f_task_id);
+                        ImageButton mStopTimerButton = findViewById(
+                                R.id.f_stop_timer_button);
 
-                    mStopTimerButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            TaskStopDialog dialog = new TaskStopDialog();
-                            dialog.show(getSupportFragmentManager(), "TaskStopDialog");
-                        }
-                    });
-                    mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
-                    mFreezedIssue.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
+                        mStopTimerButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                TaskStopDialog dialog = new TaskStopDialog();
+                                dialog.show(getSupportFragmentManager(), "TaskStopDialog");
+                            }
+                        });
+                        mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
+                        mFreezedIssue.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
 
-                            Intent intent = new Intent(MainActivity.this, TaskActivity.class);
-                            intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
-                            intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
-                            startActivity(intent);
-                        }
-                    });
-                    mTaskId.setText("# " + String.valueOf(issueId));
-                    mTaskSubject.setText(issue.getSubject());
-                    mTaskProject.setText(issue.getProject().getName());
-                    String projectName = issue.getProject().getName().substring(0, 1);
-                    mProjectFirstLetterTextView.setText(projectName);
+                                Intent intent = new Intent(MainActivity.this, TaskActivity.class);
+                                intent.putExtra(TaskActivity.EXTRA_ISSUE_ID, issueId);
+                                intent.putExtra(TaskActivity.EXTRA_TOKEN, authToken);
+                                startActivity(intent);
+                            }
+                        });
+                        mTaskId.setText(String.format("# %s", String.valueOf(issueId)));
+                        mTaskSubject.setText(issue.getSubject());
+                        mTaskProject.setText(issue.getProject().getName());
+                        String projectName = issue.getProject().getName().substring(0, 1);
+                        mProjectFirstLetterTextView.setText(projectName);
+                    }
                 }
 
                 @Override
-                public void onFailure(Call<IssueResponse> call, Throwable t) {
+                public void onFailure(@NonNull Call<IssueResponse> call, @NonNull Throwable t) {
 
                 }
             });
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             Log.e(TAG, e.getLocalizedMessage());
-            TextView errorText      = (TextView) findViewById(R.id.f_task_subject);
+            TextView errorText = findViewById(R.id.f_task_subject);
             errorText.setText(e.getLocalizedMessage());
         }
     }
