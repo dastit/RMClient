@@ -1,25 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/nav_header"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="5dp"
-    android:orientation="vertical">
-
+    android:paddingTop="50dp"
+    android:paddingStart="15dp"
+    android:paddingLeft="15dp"
+    android:orientation="vertical"
+    android:background="@drawable/gradient">
     <ImageView
         android:id="@+id/nav_header_avatar_image"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_gravity="center_horizontal" />
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginBottom="5dp" />
     <TextView
         android:id="@+id/nav_header_user_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:textColor="@color/colorPrimaryDark" />
+        android:textColor="@color/colorWhite"
+        android:textStyle="bold"/>
     <TextView
         android:id="@+id/nav_header_user_login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:textColor="@color/colorPrimaryDark" />
+        android:textColor="@color/colorWhite"
+        android:layout_marginBottom="5dp"/>
 </LinearLayout>

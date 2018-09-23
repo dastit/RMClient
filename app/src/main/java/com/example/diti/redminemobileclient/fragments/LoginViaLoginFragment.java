@@ -176,7 +176,7 @@ public class LoginViaLoginFragment extends Fragment {
                             User           user      = response.body().getUser();
                             String         authToken = user.getApiKey();
                             String         email     = user.getMail();
-                            String         name      = user.getFirstname() + user.getLastname();
+                            String         name      = user.getLastname() +" "+ user.getFirstname();
 
                             RedmineAccount account   = new RedmineAccount(login);
                             Bundle         result    = new Bundle();

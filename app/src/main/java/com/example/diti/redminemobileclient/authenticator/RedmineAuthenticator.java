@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.activities.LoginActivity;
+import com.example.diti.redminemobileclient.model.User;
 import com.example.diti.redminemobileclient.model.Users;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
@@ -62,6 +63,8 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
     public Bundle getAuthToken(final AccountAuthenticatorResponse response, final Account account,
                                String authTokenType, Bundle options) throws NetworkErrorException {
 
+        String email = null;
+        String userName = null;
         //String authToken = am.peekAuthToken(account, authTokenType);
         String       authToken = am.getPassword(account);
         final Bundle result    = new Bundle();
@@ -85,7 +88,12 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
 
                 Response<Users> execute = call.execute();
                 if (execute.isSuccessful()) {
-                    authToken = execute.body().getUser().getApiKey();
+                    User user = execute.body().getUser();
+                    authToken = user.getApiKey();
+                    email = user.getMail();
+                    userName = user.getLastname() +" "+ user.getFirstname();
+                    result.putString(mContext.getString(R.string.AM_EMAIL), email);
+                    result.putString(mContext.getString(R.string.AM_FIO), userName);
                     setResultContent(account, authToken, result);
                     am.setAuthToken(account, account.type, authToken);
                 } else {
@@ -105,6 +113,10 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
         //Фантастика, токен закешировался, возвращаем его
         else {
             setResultContent(account, authToken, result);
+            email = am.getUserData(account, mContext.getString(R.string.AM_EMAIL));
+            userName = am.getUserData(account, mContext.getString(R.string.AM_FIO));
+            result.putString(mContext.getString(R.string.AM_EMAIL), email);
+            result.putString(mContext.getString(R.string.AM_FIO), userName);
         }
 
         return result;

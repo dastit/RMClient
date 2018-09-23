@@ -10,8 +10,10 @@ import android.arch.lifecycle.Lifecycle;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -30,6 +32,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +49,7 @@ import com.example.diti.redminemobileclient.fragments.TaskStopDialog;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.RequestCreator;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -356,11 +360,40 @@ public class MainActivity extends AppCompatActivity
                     hexString.append(h);
                 }
                 String url = "https://www.gravatar.com/avatar/" + hexString.toString() +
-                        "?default=wavatar&s=120";
-                Picasso.get().load(url).into(mUserAvatarImageView);
+                        "?default=wavatar";
+                RequestCreator load = Picasso.get().load(url);
+                load.into(mUserAvatarImageView);
+                new AsyncTask<Void, Void, Bitmap>(){
+                    @Override
+                    protected Bitmap doInBackground(Void... voids) {
+                        try {
+                            return load.get();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            return null;
+                        }
+                    }
+
+                    @Override
+                    protected void onPostExecute(Bitmap bitmap) {
+                        if(bitmap != null){
+                            int pixel = bitmap.getPixel(1,1);
+                            LinearLayout layout = findViewById(R.id.nav_header);
+                            layout.setBackgroundColor(pixel);
+                        }
+                    }
+                }.execute();
+
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
+        }
+
+        if(mUserName!=null){
+            mUserNameTextView.setText(mUserName);
+        }
+        if(mLogin!=null){
+            mUserLoginTextView.setText(mLogin);
         }
     }
 
