@@ -29,6 +29,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,8 +45,11 @@ import com.example.diti.redminemobileclient.fragments.TaskListFragment;
 import com.example.diti.redminemobileclient.fragments.TaskStopDialog;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -65,7 +69,15 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout   mDrawerLayout;
     private ProgressBar    mProgressView;
     private String         authToken;
-    private CardView       mFreezedIssue;
+    private CardView       mFriezedIssue;
+
+    private ImageView mUserAvatarImageView;
+    private TextView  mUserNameTextView;
+    private TextView  mUserLoginTextView;
+
+    private String mLogin;
+    private String mUserName;
+    private String mEmail;
 
     private boolean isAuthNeeded = true;
 
@@ -75,7 +87,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         initToolbars();
         mProgressView = findViewById(R.id.central_fragment_progress);
-        mFreezedIssue = findViewById(R.id.freezed_issue);
+        mFriezedIssue = findViewById(R.id.freezed_issue);
 
         if (savedInstanceState != null) {
             Log.d(TAG, "Restore state");
@@ -121,7 +133,7 @@ public class MainActivity extends AppCompatActivity
                     mAccountListFragment.show(getSupportFragmentManager(), "AccountListFragment");
                 }
             } else {
-                initCentralFragment(authToken);
+                initCentralFragment();
             }
         } else {
             NoConnectionDialog dialog = new NoConnectionDialog();
@@ -160,9 +172,16 @@ public class MainActivity extends AppCompatActivity
                                        public void run(AccountManagerFuture<Bundle> future) {
                                            try {
                                                Bundle result = future.getResult();
+                                               mEmail = result.getString(
+                                                       getString(R.string.AM_EMAIL));
+
+                                               mLogin = result.getString(
+                                                       AccountManager.KEY_ACCOUNT_NAME);
+                                               mUserName = result.getString(getString(R.string
+                                                                                              .AM_FIO));
                                                authToken = result.getString(
                                                        AccountManager.KEY_PASSWORD);
-                                               initCentralFragment(authToken);
+                                               initCentralFragment();
                                            } catch (OperationCanceledException e) {
                                                e.printStackTrace();
                                            } catch (IOException e) {
@@ -192,6 +211,12 @@ public class MainActivity extends AppCompatActivity
                                                  }
                                                  authToken = result.getString(
                                                          AccountManager.KEY_AUTHTOKEN);
+                                                 mEmail = result.getString(
+                                                         getString(R.string.AM_EMAIL));
+
+                                                 mLogin = account.name;
+                                                 mUserName = result.getString(getString(R.string
+                                                                                                .AM_FIO));
                                                  mAccountManager.invalidateAuthToken(account.type,
                                                                                      authToken);
                                                  Log.d(TAG, "Token invalidated");
@@ -209,7 +234,7 @@ public class MainActivity extends AppCompatActivity
                                                                                         .settings_base_url),
                                                                       baseUrl);
                                                      editor.apply();
-                                                     initCentralFragment(authToken);
+                                                     initCentralFragment();
                                                  }
                                              } catch (OperationCanceledException | IOException | AuthenticatorException e) {
                                                  Toast.makeText(getApplicationContext(),
@@ -233,6 +258,14 @@ public class MainActivity extends AppCompatActivity
         }
         mDrawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                        //TODO:create feedback
+                        return false;
+                    }
+                });
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.navigation);
 
@@ -266,7 +299,7 @@ public class MainActivity extends AppCompatActivity
                                                                         projectListFragment,
                                                                         PROJECT_LIST_FRAGMENT_TAG)
                                                                .commit();
-                                    mFreezedIssue.setVisibility(View.GONE);
+                                    mFriezedIssue.setVisibility(View.GONE);
 
                                 case R.id.menu_stat://пункт меню "Статистика"
                             }
@@ -276,11 +309,12 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
-    private void initCentralFragment(String token) {
+    private void initCentralFragment() {
+        fillNavigationDrawerHeader();
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
             try {
                 if (findViewById(R.id.fragment_container) != null) {
-                    TaskListFragment taskListFragment = TaskListFragment.newInstance(token);
+                    TaskListFragment taskListFragment = TaskListFragment.newInstance(authToken);
                     getSupportFragmentManager().beginTransaction()
                                                .add(R.id.fragment_container, taskListFragment,
                                                     TASK_LIST_FRAGMENT_TAG)
@@ -296,6 +330,35 @@ public class MainActivity extends AppCompatActivity
             } catch (IllegalStateException e) {
                 Toast.makeText(this, "Не удалось загрузить данные, пожалуйста, перезапустите " +
                         "приложение.", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void fillNavigationDrawerHeader() {
+        mUserAvatarImageView = findViewById(R.id.nav_header_avatar_image);
+        mUserNameTextView = findViewById(R.id.nav_header_user_name);
+        mUserLoginTextView = findViewById(R.id.nav_header_user_login);
+
+        if (mEmail != null) {
+            mEmail = mEmail.trim().toLowerCase();
+            try {
+                MessageDigest md = MessageDigest.getInstance("MD5");
+                md.update(mEmail.getBytes());
+                byte messageDigest[] = md.digest();
+
+                // Create Hex String
+                StringBuilder hexString = new StringBuilder();
+                for (byte aMessageDigest : messageDigest) {
+                    String h = Integer.toHexString(0xFF & aMessageDigest);
+                    while (h.length() < 2)
+                        h = "0" + h;
+                    hexString.append(h);
+                }
+                String url = "https://www.gravatar.com/avatar/" + hexString.toString() +
+                        "?default=wavatar&s=120";
+                Picasso.get().load(url).into(mUserAvatarImageView);
+            } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
         }
@@ -321,10 +384,10 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onResponse(@NonNull Call<IssueResponse> call,
                                        @NonNull Response<IssueResponse> response) {
-                    if (response.isSuccessful() && response.body()!=null && response.body()
-                                                                                   .getIssue()!=null) {
+                    if (response.isSuccessful() && response.body() != null && response.body()
+                                                                                      .getIssue() != null) {
                         Issue issue = response.body().getIssue();
-                        mFreezedIssue.setVisibility(View.VISIBLE);
+                        mFriezedIssue.setVisibility(View.VISIBLE);
                         TextView mTaskSubject      = findViewById(R.id.f_task_subject);
                         TextView mTaskCreationDate = findViewById(R.id.f_task_date);
                         TextView mTaskProject      = findViewById(R.id.f_task_project);
@@ -342,7 +405,7 @@ public class MainActivity extends AppCompatActivity
                             }
                         });
                         mTaskCreationDate.setText(DateConverter.getDate(issue.getCreatedOn()));
-                        mFreezedIssue.setOnClickListener(new View.OnClickListener() {
+                        mFriezedIssue.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
 
@@ -374,7 +437,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void invalidateFreezedTask() {
-        mFreezedIssue.invalidate();
+        mFriezedIssue.invalidate();
     }
 
     @Override
@@ -390,7 +453,7 @@ public class MainActivity extends AppCompatActivity
     //методы для TaskStopDialog
     @Override
     public void OnDialogIteration() {
-        mFreezedIssue.setVisibility(View.GONE);
+        mFriezedIssue.setVisibility(View.GONE);
         TaskListFragment taskListFragment = TaskListFragment.newInstance(authToken);
         getSupportFragmentManager().beginTransaction()
                                    .replace(R.id.fragment_container, taskListFragment,

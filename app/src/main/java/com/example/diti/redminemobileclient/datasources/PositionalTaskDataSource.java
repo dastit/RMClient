@@ -9,6 +9,9 @@ import com.example.diti.redminemobileclient.model.Issues;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Response;
@@ -20,63 +23,55 @@ public class PositionalTaskDataSource extends PositionalDataSource<Issue> {
     Issues result = new Issues();
     String sortBy;
 
-    public PositionalTaskDataSource(RedmineRestApiClient.RedmineClient client, String sortByColumn) {
+    public PositionalTaskDataSource(RedmineRestApiClient.RedmineClient client,
+                                    String sortByColumn) {
         sortBy = sortByColumn;
         mRedmineClient = client;
     }
 
     @Override
-    public void loadInitial(@NonNull final LoadInitialParams params, @NonNull final LoadInitialCallback callback) {
+    public void loadInitial(@NonNull final LoadInitialParams params,
+                            @NonNull final LoadInitialCallback callback) {
         Log.d(TAG, "loadInitial, requestedStartPosition = " + params.requestedStartPosition +
-                   ", requestedLoadSize = " + params.requestedLoadSize);
+                ", requestedLoadSize = " + params.requestedLoadSize);
 
         Call<Issues> call =
-                mRedmineClient.reposForTasks(params.requestedStartPosition, params.requestedLoadSize, sortBy);
-//        call.enqueue(new Callback<Issues>() {
-//            @Override
-//            public void onResponse(Call<Issues> call, IssueResponse<Issues> response) {
-//                if(response.isSuccessful()){
-//                    result = response.body();
-//                    if (params.placeholdersEnabled) {
-//                        callback.onResult(result.getIssues(), result.getOffset(), result.getTotalCount());
-//                    } else {
-//                        callback.onResult(result.getIssues(), result.getOffset());
-//                    }
-//                }
-//            }
-//            @Override
-//            public void onFailure(Call<Issues> call, Throwable t) {
-//                Log.d(TAG, t.getLocalizedMessage());
-//            }
-//        });
+                mRedmineClient.reposForTasks(params.requestedStartPosition,
+                                             params.requestedLoadSize, sortBy);
         try {
             Response response = call.execute();
-            if(response.isSuccessful()){
+            if (response.isSuccessful()) {
                 result = (Issues) response.body();
                 if (params.placeholdersEnabled) {
-                    callback.onResult(result.getIssues(), result.getOffset(), result.getTotalCount());
+                    callback.onResult(result.getIssues(), result.getOffset(),
+                                      result.getTotalCount());
                 } else {
                     callback.onResult(result.getIssues(), result.getOffset());
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getLocalizedMessage());
+            List<String> errorList = new ArrayList<>();
+            errorList.add(e.getLocalizedMessage());
+            callback.onResult(Collections.EMPTY_LIST, 0, 0);
         }
-
     }
 
     @Override
     public void loadRange(@NonNull LoadRangeParams params, @NonNull LoadRangeCallback callback) {
         Log.d(TAG, "loadRange, startPosition = " + params.startPosition +
-                   ", loadSize = " + params.loadSize);
+                ", loadSize = " + params.loadSize);
 
         Call<Issues> call =
                 mRedmineClient.reposForTasks(params.startPosition, params.loadSize, sortBy);
         try {
             result = call.execute().body();
+            callback.onResult(result.getIssues());
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getLocalizedMessage());
+            List<String> errorList = new ArrayList<>();
+            errorList.add(e.getLocalizedMessage());
+            callback.onResult(Collections.EMPTY_LIST);
         }
-        callback.onResult(result.getIssues());
     }
 }

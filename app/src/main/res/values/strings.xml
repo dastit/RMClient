@@ -86,6 +86,8 @@
     <string name="action_login_via_login">Войти с логином / паролем</string>
     <string name="empty_base_url_error">Подключение не установлено. В настройках не указан адрес сервера Redmine.</string>
     <string name="AM_BASE_URL">account_manager_base_url</string>
+    <string name="AM_FIO">account_manager_user_name</string>
+    <string name="AM_EMAIL">account_manager_user_email</string>
     <string name="error_empty_APIKEY">Введите API key</string>
     <string name="error_wrong_host_name">Неправильное имя сервера</string>
     <string name="error_send_new_comment">Новый комментарий не отправлен. Проверьте настройки подключения или перезагрузите приложение.</string>

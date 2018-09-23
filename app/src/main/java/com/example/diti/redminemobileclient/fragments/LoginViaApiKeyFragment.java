@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import com.example.diti.redminemobileclient.R;
 import com.example.diti.redminemobileclient.authenticator.RedmineAccount;
+import com.example.diti.redminemobileclient.model.User;
 import com.example.diti.redminemobileclient.model.Users;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 
@@ -117,18 +118,24 @@ public class LoginViaApiKeyFragment extends Fragment {
                                        @NonNull Response<Users> response) {
                     showProgress(false);
                     if (response.isSuccessful()) {
-
-                        String         login   = response.body().getUser().getLogin();
+                        User user = response.body().getUser();
+                        String         login   = user.getLogin();
+                        String email = user.getMail();
+                        String name = user.getFirstname() + user.getLastname();
                         RedmineAccount account = new RedmineAccount(login);
                         Bundle         result  = new Bundle();
                         AccountManager am = AccountManager.get(getActivity()
                                                                        .getApplicationContext());
                         Bundle userOptions = new Bundle();
                         userOptions.putString(getString(R.string.AM_BASE_URL), baseUrl);
+                        userOptions.putString(getString(R.string.AM_EMAIL), email);
+                        userOptions.putString(getString(R.string.AM_FIO), name);
                         if (am.addAccountExplicitly(account, apiKey, userOptions)) {
                             result.putString(AccountManager.KEY_ACCOUNT_NAME, login);
                             result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
                             result.putString(AccountManager.KEY_PASSWORD, apiKey);
+                            result.putString(getString(R.string.AM_EMAIL), email);
+                            result.putString(getString(R.string.AM_FIO), name);
                             am.setAuthToken(account, RedmineAccount.TOKEN_FULL_ACCESS, apiKey);
                         } else {
                             result.putString(AccountManager.KEY_ERROR_MESSAGE,

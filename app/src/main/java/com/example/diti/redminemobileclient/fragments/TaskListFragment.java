@@ -69,7 +69,7 @@ public class TaskListFragment extends Fragment {
     private SharedPreferences                 mSharedPreferences;
     private FloatingActionButton              mCreateNewTaskButton;
     private SharedPreferences.Editor          mEditor;
-    private TextView mErrorText;
+    private TextView                          mErrorText;
 
     public TaskListFragment() {
     }
@@ -96,94 +96,106 @@ public class TaskListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tasklist_list, container, false);
+        mErrorText = view.findViewById(R.id.error_text);
+
         try {
             RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
                     mAuthToken, getActivity());
-        repository = new PagedTaskListRepository(client);
-        PagedTasksListViewModelFactory factory = new PagedTasksListViewModelFactory(repository);
-        viewModel = ViewModelProviders.of(this, factory).get(PagedTasksListViewModel.class);
+            repository = new PagedTaskListRepository(client);
+            PagedTasksListViewModelFactory factory = new PagedTasksListViewModelFactory(repository);
+            viewModel = ViewModelProviders.of(this, factory).get(PagedTasksListViewModel.class);
 
-        // Set the adapter and swipecontroller
+            // Set the adapter and swipecontroller
 
-        final SwipeRefreshLayout swipeContainer = view.findViewById(R.id.swipeContainer);
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                repository.getDSFactory().postLiveData.getValue().invalidate();
-            }
-        });
-        swipeContainer.setColorSchemeColors(getResources().getColor(android.R.color.holo_red_dark));
-
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.list);
-        Context context = view.getContext();
-        mLayoutManager = new LinearLayoutManager(context);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mAdapter = new TaskListAdapter();
-        viewModel.pagedList.observe(getActivity(), new Observer<PagedList<Issue>>() {
-            @Override
-            public void onChanged(@Nullable PagedList<Issue> issues) {
-                swipeContainer.setRefreshing(false);
-                mAdapter.submitList(issues);
-            }
-        });
-        mRecyclerView.setAdapter(mAdapter);
-
-        final SwipeController swipeController = new SwipeController(new SwipeControllerActions() {
-            @Override
-            public void onRightClicked(int position) {
-                Issue   mIssue  = mAdapter.getItemClicked(position);
-                Context context = getActivity().getApplicationContext();
-                SharedPreferences sharedPreferences = context.getSharedPreferences(
-                        getString(R.string.preference_file_key), context.MODE_PRIVATE);
-                if (sharedPreferences.contains(getString(R.string.task_id_started_key)) &&
-                        sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) !=
-                                mIssue.getIssueid()) {
-                    Toast.makeText(getActivity(), "Закончите выполнение задачи №" +
-                            sharedPreferences.getInt(getString(R.string.task_id_started_key), 0) +
-                            " прежде чем запускать новую", Toast.LENGTH_LONG)
-                         .show();
-                } else {
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putInt(getString(R.string.task_id_started_key), mIssue.getIssueid());
-                    editor.putLong(getString(R.string.task_time_started_key),
-                                   System.currentTimeMillis());
-                    editor.commit();
-                    createNotification(mIssue);
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(
-                            getActivity());
-                    notificationManager.notify(111, notification);
-                    if (mListener != null) {
-                        mListener.invalidateFreezedTask();
-                    }
-                    mAdapter.notifyDataSetChanged();
+            final SwipeRefreshLayout swipeContainer = view.findViewById(R.id.swipeContainer);
+            swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    repository.getDSFactory().postLiveData.getValue().invalidate();
                 }
-            }
-        }, getActivity());
-        itemTouchHelper = new ItemTouchHelper(swipeController);
-        itemTouchHelper.attachToRecyclerView(mRecyclerView);
-        mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
-            @Override
-            public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
-                swipeController.onDraw(c);
-            }
-        });
+            });
+            swipeContainer.setColorSchemeColors(
+                    getResources().getColor(android.R.color.holo_red_dark));
 
-        mCreateNewTaskButton = (FloatingActionButton) view.findViewById(R.id.new_task_fab);
-        mCreateNewTaskButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), NewTaskActivity.class);
-                intent.putExtra(NewTaskActivity.EXTRA_AUTH, mAuthToken);
-                startActivity(intent);
-            }
-        });
-        }catch (NullPointerException e){
-            mListener.setProgressBar();
-            mErrorText = view.findViewById(R.id.error_text);
-            mErrorText.setVisibility(View.VISIBLE);
+            mRecyclerView = (RecyclerView) view.findViewById(R.id.list);
+            Context context = view.getContext();
+            mLayoutManager = new LinearLayoutManager(context);
+            mRecyclerView.setLayoutManager(mLayoutManager);
+            mAdapter = new TaskListAdapter();
+            viewModel.pagedList.observe(getActivity(), new Observer<PagedList<Issue>>() {
+                @Override
+                public void onChanged(@Nullable PagedList<Issue> issues) {
+                    swipeContainer.setRefreshing(false);
+                    mAdapter.submitList(issues);
+                }
+            });
+            mRecyclerView.setAdapter(mAdapter);
+
+            final SwipeController swipeController = new SwipeController(
+                    new SwipeControllerActions() {
+                        @Override
+                        public void onRightClicked(int position) {
+                            Issue   mIssue  = mAdapter.getItemClicked(position);
+                            Context context = getActivity().getApplicationContext();
+                            SharedPreferences sharedPreferences = context.getSharedPreferences(
+                                    getString(R.string.preference_file_key), context.MODE_PRIVATE);
+                            if (sharedPreferences.contains(
+                                    getString(R.string.task_id_started_key)) &&
+                                    sharedPreferences.getInt(
+                                            getString(R.string.task_id_started_key), 0) !=
+                                            mIssue.getIssueid()) {
+                                Toast.makeText(getActivity(), "Закончите выполнение задачи №" +
+                                        sharedPreferences.getInt(
+                                                getString(R.string.task_id_started_key), 0) +
+                                        " прежде чем запускать новую", Toast.LENGTH_LONG)
+                                     .show();
+                            } else {
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putInt(getString(R.string.task_id_started_key),
+                                              mIssue.getIssueid());
+                                editor.putLong(getString(R.string.task_time_started_key),
+                                               System.currentTimeMillis());
+                                editor.commit();
+                                createNotification(mIssue);
+                                NotificationManagerCompat notificationManager = NotificationManagerCompat
+                                        .from(
+                                                getActivity());
+                                notificationManager.notify(111, notification);
+                                if (mListener != null) {
+                                    mListener.invalidateFreezedTask();
+                                }
+                                mAdapter.notifyDataSetChanged();
+                            }
+                        }
+                    }, getActivity());
+            itemTouchHelper = new ItemTouchHelper(swipeController);
+            itemTouchHelper.attachToRecyclerView(mRecyclerView);
+            mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+                @Override
+                public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
+                    swipeController.onDraw(c);
+                }
+            });
+
+            mCreateNewTaskButton = (FloatingActionButton) view.findViewById(R.id.new_task_fab);
+            mCreateNewTaskButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getActivity(), NewTaskActivity.class);
+                    intent.putExtra(NewTaskActivity.EXTRA_AUTH, mAuthToken);
+                    startActivity(intent);
+                }
+            });
+        } catch (NullPointerException e) {
+            setError();
             mErrorText.setText(R.string.empty_base_url_error);
         }
         return view;
+    }
+
+    private void setError() {
+        mListener.setProgressBar();
+        mErrorText.setVisibility(View.VISIBLE);
     }
 
     private void createNotification(Issue mIssue) {
@@ -260,6 +272,15 @@ public class TaskListFragment extends Fragment {
 
         protected TaskListAdapter() {
             super(DIFF_CALLBACK);
+        }
+
+        @Override
+        public void submitList(PagedList<Issue> pagedList) {
+            if(pagedList.size() == 0){
+                setError();
+                mErrorText.setText("Некорректное имя хоста");
+            }
+            super.submitList(pagedList);
         }
 
         @NonNull

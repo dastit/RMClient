@@ -25,11 +25,14 @@ import retrofit2.Response;
 
 public class RedmineAuthenticator extends AbstractAccountAuthenticator {
     private final static String TAG = "RedmineAuthenticator";
-    Context mContext;
+    private Context mContext;
+    private AccountManager am;
 
     public RedmineAuthenticator(Context context) {
         super(context);
         mContext = context;
+        am = AccountManager.get(mContext);
+
     }
 
     @Override
@@ -58,23 +61,22 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
     @Override
     public Bundle getAuthToken(final AccountAuthenticatorResponse response, final Account account,
                                String authTokenType, Bundle options) throws NetworkErrorException {
-        final AccountManager am = AccountManager.get(mContext);
 
         //String authToken = am.peekAuthToken(account, authTokenType);
         String       authToken = am.getPassword(account);
         final Bundle result    = new Bundle();
 
+        SharedPreferences sharedPreferences = mContext.getSharedPreferences(mContext
+                                                                                    .getString(
+                                                                                            R.string.preference_file_key),
+                                                                            Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(mContext.getString(R.string.settings_base_url), am.getUserData
+                (account, mContext.getString(R.string.AM_BASE_URL)));
+        editor.commit();
+
         //если токен не закэшировался при создании аккаунта - запрашиваем токен опять по логину паролю
         if (TextUtils.isEmpty(authToken)) {
-            SharedPreferences sharedPreferences = mContext.getSharedPreferences(mContext
-                                                                                        .getString(
-                                                                                                R.string.preference_file_key),
-                                                                                Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(mContext.getString(R.string.settings_base_url), am.getUserData
-                    (account, mContext.getString(R.string.AM_BASE_URL)));
-            editor.commit();
-
             try {
                 RedmineRestApiClient.RedmineClient client = RedmineRestApiClient.getRedmineClient(
                         am.getPassword(account), mContext);
@@ -84,9 +86,7 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
                 Response<Users> execute = call.execute();
                 if (execute.isSuccessful()) {
                     authToken = execute.body().getUser().getApiKey();
-                    result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
-                    result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
-                    result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
+                    setResultContent(account, authToken, result);
                     am.setAuthToken(account, account.type, authToken);
                 } else {
                     final Intent intent = new Intent(mContext, LoginActivity.class);
@@ -104,12 +104,20 @@ public class RedmineAuthenticator extends AbstractAccountAuthenticator {
 
         //Фантастика, токен закешировался, возвращаем его
         else {
-            result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
-            result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
-            result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
+            setResultContent(account, authToken, result);
         }
 
         return result;
+    }
+
+    private void setResultContent(Account account, String authToken, Bundle result) {
+        String email = am.getUserData(account, mContext.getString(R.string.AM_EMAIL));
+        String userName = am.getUserData(account, mContext.getString(R.string.AM_FIO));
+        result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
+        result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+        result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
+        result.putString(mContext.getString(R.string.AM_EMAIL), email);
+        result.putString(mContext.getString(R.string.AM_FIO), userName);
     }
 
     @Override
