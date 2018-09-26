@@ -42,11 +42,26 @@
             android:layout_below="@id/task_comment_date"
             android:layout_marginLeft="@dimen/text_margin"
             android:layout_marginRight="@dimen/text_margin"
+            android:paddingBottom="@dimen/text_margin"
             android:ellipsize="end"
             android:gravity="fill"
             android:maxLines="3"
             android:textColor="@color/colorDarkGrey"
             tool:text="Комментарий" />
+
+        <TextView
+            android:id="@+id/task_comment_details_change"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/task_comment_note"
+            android:layout_marginLeft="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
+            android:ellipsize="end"
+            android:gravity="fill"
+            android:textColor="@color/colorGrey"
+            android:textStyle="italic"
+            tool:text="Значение изменено"
+            android:visibility="gone"/>
 
         <ImageButton
             android:id="@+id/task_comment_expand_button"

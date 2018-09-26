@@ -37,23 +37,19 @@ import com.example.diti.redminemobileclient.datasources.IssueResponse;
 import com.example.diti.redminemobileclient.datasources.IssueViewModel;
 import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.model.IssueJournal;
+import com.example.diti.redminemobileclient.model.IssueJournalDetail;
 import com.example.diti.redminemobileclient.model.IssueJournalUser;
 import com.example.diti.redminemobileclient.model.Upload;
 import com.example.diti.redminemobileclient.model.UploadResponse;
 import com.example.diti.redminemobileclient.retrofit.RedmineRestApiClient;
 import com.squareup.picasso.Picasso;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -183,6 +179,7 @@ public class TaskCommentsFragment extends Fragment {
             public final TextView    mNote;
             public final TextView    mAuthor;
             public final TextView    mDate;
+            public final TextView    mDetails;
             public final ImageButton mExpandButton;
             public final ImageButton mCollapseButton;
 
@@ -195,6 +192,7 @@ public class TaskCommentsFragment extends Fragment {
                 mExpandButton = view.findViewById(R.id.task_comment_expand_button);
                 mCollapseButton = view.findViewById(
                         R.id.task_comment_collapse_button);
+                mDetails = view.findViewById(R.id.task_comment_details_change);
             }
 
             public void bindItem(IssueJournal journal, Issue issue) {
@@ -227,6 +225,19 @@ public class TaskCommentsFragment extends Fragment {
                 });
 
                 mDate.setText(DateConverter.getDate(journal.getCreatedOn()));
+
+                if(journal.getDetails().size()>0) {
+
+                    StringBuilder details = new StringBuilder();
+                    for (IssueJournalDetail detail : journal.getDetails()) {
+                        String detailText = "Значение " + detail.getName() + " (" + detail.getProperty() + ")" +
+                                " c " + detail.getOldValue() + " на " + detail.getNewValue();
+                        details.append(detailText);
+                        details.append("\n");
+                    }
+                    mDetails.setText(details);
+                    mDetails.setVisibility(View.VISIBLE);
+                }
 
                 if (issue.getAttachments().size() != 0) {
                     new AsyncTask<Issue, Void, SpannableStringBuilder>() {
@@ -328,11 +339,12 @@ public class TaskCommentsFragment extends Fragment {
                     for (int i = 0; i < attachmentList.size(); i++) {
                         Uri uri = attachmentList.get(i);
                         try {
-                            ContentResolver contentResolver   = getActivity().getContentResolver();
+                            ContentResolver contentResolver = getActivity().getContentResolver();
 
                             //read file content to byte array
                             ParcelFileDescriptor mInputPFD = getActivity().getContentResolver()
-                                                                          .openFileDescriptor(uri,"r");
+                                                                          .openFileDescriptor(uri,
+                                                                                              "r");
                             FileDescriptor fileContent = mInputPFD.getFileDescriptor();
                             InputStream initialStream = new FileInputStream(
                                     fileContent);
@@ -341,7 +353,7 @@ public class TaskCommentsFragment extends Fragment {
                             initialStream.close();
 
                             //get file type
-                            String          contentTypeString = contentResolver.getType(uri);
+                            String contentTypeString = contentResolver.getType(uri);
                             MediaType contentType = MediaType.parse(
                                     contentTypeString);
                             RequestBody requestBody = RequestBody.create(contentType,
