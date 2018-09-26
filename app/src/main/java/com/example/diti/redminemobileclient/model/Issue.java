@@ -111,6 +111,10 @@ public class Issue  {
     @SerializedName("notes")
     private String note;
 
+    @Ignore
+    @SerializedName("uploads")
+    private List<Upload> uploads = null;
+
     public Long getLast_request_time_in_milliseconds() {
         return last_request_time_in_milliseconds;
     }
@@ -254,6 +258,14 @@ public class Issue  {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public List<Upload> getUploads() {
+        return uploads;
+    }
+
+    public void setUploads(List<Upload> uploads) {
+        this.uploads = uploads;
     }
 
     public Issue() {

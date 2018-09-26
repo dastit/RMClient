@@ -32,7 +32,10 @@ public class LoginActivity extends AccountAuthenticatorActivity
         mBaseUrlInputLayout.setHint("Host address");
         mBaseUrl = (EditText)findViewById(R.id.base_url);
         //TODO: for debug
-        mBaseUrl.setText("http://redmine.igs.local/");
+        //mBaseUrl.setText("http://redmine.igs.local/");
+        mBaseUrl.setText("https://redmine.i-gs.ru/");
+
+
 
         LoginViaLoginFragment fragment = LoginViaLoginFragment.newInstance();
         FragmentManager       fm       = getFragmentManager();

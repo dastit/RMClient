@@ -3,20 +3,19 @@ package com.example.diti.redminemobileclient.retrofit;
 import android.content.Context;
 
 import com.example.diti.redminemobileclient.datasources.IssueResponse;
-import com.example.diti.redminemobileclient.model.Issue;
 import com.example.diti.redminemobileclient.model.Issues;
-import com.example.diti.redminemobileclient.model.Membership;
 import com.example.diti.redminemobileclient.model.Memberships;
 import com.example.diti.redminemobileclient.model.Projects;
+import com.example.diti.redminemobileclient.model.UploadResponse;
 import com.example.diti.redminemobileclient.model.Users;
 
-import java.io.File;
-
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.Header;
+import retrofit2.http.Headers;
+import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -61,5 +60,9 @@ public class RedmineRestApiClient {
 
         @PUT ("/issues/{issueId}.json")
         Call<ResponseBody> sendNewComment(@Path("issueId") String issueId, @Body IssueResponse issue);
+
+        @Headers("Content-Type: application/octet-stream")
+        @POST ("/uploads.json")
+        Call<UploadResponse> sendAttachment(@Body RequestBody file);
     }
 }

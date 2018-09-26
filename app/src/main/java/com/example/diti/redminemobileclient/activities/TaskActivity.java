@@ -55,8 +55,7 @@ import java.util.Random;
 public class TaskActivity extends AppCompatActivity
         implements TaskDetailsFragment.OnFragmentInteractionListener,
                    TaskCommentsFragment.OnListFragmentInteractionListener,
-                   TaskStopDialog.OnDialogIterationListener,
-                   NewCommentDialog.OnNewCommentDialogInteractionListener {
+                   TaskStopDialog.OnDialogIterationListener {
 
     private static final String TAG                              = "TaskActivity";
     public static final  String EXTRA_ISSUE_ID                   = "issue_id";
@@ -262,11 +261,6 @@ public class TaskActivity extends AppCompatActivity
     public void OnDialogIteration() {
 
         invalidateOptionsMenu();
-    }
-
-    @Override
-    public void addNewComment(String commentText) {
-
     }
 
     private class MyFragmentPagerAdapter extends FragmentPagerAdapter {
